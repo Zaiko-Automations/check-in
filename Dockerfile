@@ -21,6 +21,7 @@ WORKDIR /app
 # Gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle config set --local without 'development test' && \
+    bundle config set --local ignore_ruby_version true && \
     bundle install --jobs 4 --retry 3
 
 # Código fonte

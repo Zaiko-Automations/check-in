@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "3.4.4"
+ruby "~> 3.4"
 
 gem "rails", "~> 7.1.6"
 gem "sprockets-rails"
