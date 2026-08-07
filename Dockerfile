@@ -3,7 +3,7 @@
 # ════════════════════════════════════════════════════════════════
 
 # ── Estágio 1: Builder ──────────────────────────────────────────
-FROM ruby:3.3-alpine AS builder
+FROM ruby:3.4-alpine AS builder
 
 # Dependências de build
 RUN apk add --no-cache \
@@ -35,7 +35,7 @@ RUN RAILS_ENV=production \
 RUN rm -rf node_modules tmp/cache vendor/bundle spec
 
 # ── Estágio 2: Produção ─────────────────────────────────────────
-FROM ruby:3.3-alpine AS production
+FROM ruby:3.4-alpine AS production
 
 # Apenas runtime deps
 RUN apk add --no-cache \
