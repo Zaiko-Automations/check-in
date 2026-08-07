@@ -68,5 +68,5 @@ EXPOSE 3000
 
 
 
-ENTRYPOINT ["bin/docker-entrypoint"]
+ENTRYPOINT ["/bin/sh", "bin/docker-entrypoint"]
 CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
