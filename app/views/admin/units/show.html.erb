@@ -1,0 +1,40 @@
+<% content_for :page_title, "Detalhes da Unidade: #{@unit.name}" %>
+
+<div style="margin-bottom: 24px;">
+  <a href="<%= admin_units_path %>" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 300px; gap: 24px;">
+  
+  <div class="card">
+    <h3 style="margin-top: 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">Informações</h3>
+    
+    <div style="margin-top: 16px;">
+      <p style="margin-bottom: 8px;"><strong>Nome:</strong> <%= @unit.name %></p>
+      <p style="margin-bottom: 8px;"><strong>Endereço:</strong> <%= @unit.address.presence || 'Não informado' %></p>
+      <p style="margin-bottom: 8px;"><strong>Cidade:</strong> <%= @unit.city.presence || 'Não informada' %></p>
+      <p style="margin-bottom: 8px;"><strong>Status:</strong> <%= @unit.active? ? 'Ativa' : 'Inativa' %></p>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0;">
+
+    <h3 style="margin-top: 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">URL de Check-in</h3>
+    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Link direto para o formulário desta unidade:</p>
+    <input type="text" value="<%= @unit.checkin_url(host: request.host_with_port) %>" readonly style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; background: #f8fafc; color: #64748b;">
+  </div>
+
+  <div class="card" style="text-align: center;">
+    <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">QR Code</h3>
+    
+    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid var(--border); display: inline-block;">
+      <%= raw @qr_svg %>
+    </div>
+    
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 16px;">
+      Imprima este QR Code e coloque na recepção da unidade.
+    </p>
+    
+    <button class="btn" style="width: 100%; margin-top: 16px;" onclick="window.print()">🖨️ Imprimir QR Code</button>
+  </div>
+
+</div>

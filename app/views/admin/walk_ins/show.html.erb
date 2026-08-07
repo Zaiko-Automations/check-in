@@ -1,0 +1,88 @@
+<% content_for :page_title, "Detalhes do Atendimento" %>
+
+<div style="margin-bottom: 24px;">
+  <a href="<%= admin_root_path %>" class="btn btn-outline">← Voltar para Fila</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+  
+  <!-- Coluna 1: Dados do Paciente e Check-in -->
+  <div>
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Informações do Paciente</h3>
+      
+      <table style="width: 100%; border: none;">
+        <tr><td style="padding: 8px 0; border: none;"><strong>Nome:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.nome %></td></tr>
+        <tr><td style="padding: 8px 0; border: none;"><strong>CPF:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.cpf %></td></tr>
+        <tr><td style="padding: 8px 0; border: none;"><strong>Nascimento:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.data_nascimento.strftime("%d/%m/%Y") %></td></tr>
+        <tr><td style="padding: 8px 0; border: none;"><strong>Sexo:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.sexo_biologico %></td></tr>
+        <tr><td style="padding: 8px 0; border: none;"><strong>Telefone:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.telefone %> <%= @patient.whatsapp ? "✅ (WhatsApp)" : "" %></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Detalhes da Cobertura</h3>
+      
+      <table style="width: 100%; border: none;">
+        <tr><td style="padding: 8px 0; border: none; width: 120px;"><strong>Tipo:</strong></td>
+            <td style="padding: 8px 0; border: none;">
+              <% if @patient.particular? %>
+                <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 13px;">Particular</span>
+              <% else %>
+                <span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 4px; font-size: 13px;">Convênio</span>
+              <% end %>
+            </td>
+        </tr>
+        <% if @patient.convenio? %>
+          <tr><td style="padding: 8px 0; border: none;"><strong>Convênio:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.convenio %></td></tr>
+          <tr><td style="padding: 8px 0; border: none;"><strong>Plano:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.plano.presence || '-' %></td></tr>
+          <tr><td style="padding: 8px 0; border: none;"><strong>Carteira:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.numero_carteira.presence || '-' %></td></tr>
+          <tr><td style="padding: 8px 0; border: none;"><strong>Validade:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.validade_carteira&.strftime("%d/%m/%Y") || '-' %></td></tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+
+  <!-- Coluna 2: Imagens -->
+  <div class="card">
+    <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Documentos Anexados</h3>
+    
+    <% if @walk_in.carteira_convenio.attached? %>
+      <div style="margin-bottom: 24px;">
+        <strong>Carteirinha do Convênio:</strong>
+        <div style="margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+          <%= image_tag @walk_in.carteira_convenio, style: "width: 100%; max-height: 250px; object-fit: contain; background: #f8fafc;" %>
+        </div>
+      </div>
+    <% else %>
+      <% if @patient.convenio? %>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Nenhuma carteirinha enviada.</p>
+      <% end %>
+    <% end %>
+
+    <% if @walk_in.requisicao_medica.attached? %>
+      <div style="margin-bottom: 24px;">
+        <strong>Requisição / Pedido Médico:</strong>
+        <div style="margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+          <%= image_tag @walk_in.requisicao_medica, style: "width: 100%; max-height: 400px; object-fit: contain; background: #f8fafc;" %>
+        </div>
+      </div>
+    <% else %>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Nenhum pedido médico enviado.</p>
+    <% end %>
+
+  </div>
+</div>
+
+<div class="card" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+  <div>
+    <strong>Status atual:</strong> 
+    <span style="background: <%= @walk_in.status == 'completed' ? '#ecfdf5' : '#eff6ff' %>; color: <%= @walk_in.status == 'completed' ? '#065f46' : '#2563eb' %>; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-left: 8px;">
+      <%= @walk_in.status.upcase %>
+    </span>
+  </div>
+  
+  <% if @walk_in.status != 'completed' %>
+    <%= button_to "Marcar como Concluído", complete_admin_walk_in_path(@walk_in), method: :patch, class: "btn", style: "background: #10b981;" %>
+  <% end %>
+</div>

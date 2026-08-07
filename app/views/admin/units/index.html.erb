@@ -1,0 +1,44 @@
+<% content_for :page_title, "Unidades e QR Codes" %>
+
+<div style="margin-bottom: 24px;">
+  <a href="<%= new_admin_unit_path %>" class="btn">+ Nova Unidade</a>
+</div>
+
+<div class="card">
+  <% if @units.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome da Unidade</th>
+          <th>Cidade</th>
+          <th>Status</th>
+          <th>Check-in URL</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @units.each do |unit| %>
+          <tr>
+            <td><strong><%= unit.name %></strong></td>
+            <td><%= unit.city.presence || '-' %></td>
+            <td>
+              <% if unit.active? %>
+                <span style="color: #10b981; font-weight: 500;">Ativa</span>
+              <% else %>
+                <span style="color: #ef4444; font-weight: 500;">Inativa</span>
+              <% end %>
+            </td>
+            <td>
+              <input type="text" value="<%= unit.checkin_url(host: request.host_with_port) %>" readonly style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; background: #f8fafc; color: #64748b;">
+            </td>
+            <td>
+              <a href="<%= admin_unit_path(unit) %>" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Ver QR Code</a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p style="color: #64748b; text-align: center; padding: 40px 0;">Nenhuma unidade cadastrada. Crie a primeira para gerar o QR Code.</p>
+  <% end %>
+</div>

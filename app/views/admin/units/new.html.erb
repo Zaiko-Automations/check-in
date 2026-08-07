@@ -1,0 +1,19 @@
+<% content_for :page_title, "Nova Unidade" %>
+
+<div class="card" style="max-width: 600px;">
+  <%= simple_form_for [:admin, @unit] do |f| %>
+    <%= f.input :name, label: "Nome da Unidade", input_html: { class: 'field-input' } %>
+    <%= f.input :address, label: "Endereço", input_html: { class: 'field-input' } %>
+    <%= f.input :city, label: "Cidade", input_html: { class: 'field-input' } %>
+    
+    <div style="margin-top: 24px;">
+      <%= f.button :submit, "Criar Unidade", class: "btn" %>
+      <a href="<%= admin_units_path %>" class="btn btn-outline" style="margin-left: 12px;">Cancelar</a>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .field-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; margin-bottom: 16px; margin-top: 6px; }
+  label { font-weight: 500; font-size: 14px; color: var(--text); }
+</style>

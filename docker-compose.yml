@@ -1,0 +1,149 @@
+version: '3.8'
+
+# ════════════════════════════════════════════════════════════════
+# Check-in Expresso — Docker Swarm Stack
+# Deploy via Portainer | Domínio: check-in.zaikohub.com.br
+# ════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── App Rails ───────────────────────────────────────────────
+  web:
+    image: checkin-expresso:latest
+    environment:
+      - RAILS_ENV=production
+      - DATABASE_URL=postgres://checkin_user:${DB_PASSWORD}@db:5432/checkin_expresso_production
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - RAILS_LOG_TO_STDOUT=true
+      - RAILS_SERVE_STATIC_FILES=true
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+    networks:
+      - network_public
+      - db-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=network_public"
+
+      # Router HTTP → HTTPS redirect
+      - "traefik.http.routers.checkin-http.rule=Host(`check-in.zaikohub.com.br`)"
+      - "traefik.http.routers.checkin-http.entrypoints=web"
+      - "traefik.http.routers.checkin-http.middlewares=redirect-https@docker"
+
+      # Router HTTPS
+      - "traefik.http.routers.checkin.rule=Host(`check-in.zaikohub.com.br`)"
+      - "traefik.http.routers.checkin.entrypoints=websecure"
+      - "traefik.http.routers.checkin.tls=true"
+      - "traefik.http.routers.checkin.tls.certresolver=letsencryptresolver"
+      - "traefik.http.routers.checkin.priority=10"
+
+      # Service (porta do Rails)
+      - "traefik.http.services.checkin.loadbalancer.server.port=3000"
+
+      # Healthcheck via /up
+      - "traefik.http.services.checkin.loadbalancer.healthcheck.path=/up"
+      - "traefik.http.services.checkin.loadbalancer.healthcheck.interval=10s"
+
+  # ─── Sidekiq (processamento de webhooks) ─────────────────────
+  sidekiq:
+    image: checkin-expresso:latest
+    command: ["bundle", "exec", "sidekiq"]
+    environment:
+      - RAILS_ENV=production
+      - DATABASE_URL=postgres://checkin_user:${DB_PASSWORD}@db:5432/checkin_expresso_production
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - REDIS_URL=redis://redis:6379/0
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+    networks:
+      - db-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  # ─── Redis (fila do Sidekiq) ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    networks:
+      - db-network
+    volumes:
+      - redis_data:/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  # ─── PostgreSQL ───────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=checkin_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=checkin_expresso_production
+    networks:
+      - db-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  # ─── Migration (roda 1x e termina) ───────────────────────────
+  db-migrate:
+    image: checkin-expresso:latest
+    command: ["bin/rails", "db:migrate"]
+    environment:
+      - RAILS_ENV=production
+      - DATABASE_URL=postgres://checkin_user:${DB_PASSWORD}@db:5432/checkin_expresso_production
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+    networks:
+      - db-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  network_public:
+    external: true
+    name: network_public
+  db-network:
+    driver: overlay
+    attachable: true

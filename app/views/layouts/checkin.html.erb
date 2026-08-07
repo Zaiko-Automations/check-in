@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title><%= content_for?(:title) ? yield(:title) : "Check-in Expresso" %></title>
+  <meta name="description" content="Check-in Expresso — Atendimento digital para laboratório. Sem fila, sem espera.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <%= stylesheet_link_tag "checkin", media: "all" %>
+  <%= csrf_meta_tags %>
+</head>
+<body class="checkin-body">
+
+  <div class="checkin-container">
+    <!-- Header -->
+    <header class="checkin-header">
+      <div class="checkin-logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">Check-in Expresso</span>
+          <% if current_tenant %>
+            <span class="logo-unit"><%= @unit&.name || current_tenant.name %></span>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    <% if notice.present? %>
+      <div class="flash flash-success"><%= notice %></div>
+    <% end %>
+    <% if alert.present? %>
+      <div class="flash flash-error"><%= alert %></div>
+    <% end %>
+
+    <!-- Main content -->
+    <main class="checkin-main">
+      <%= yield %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="checkin-footer">
+      <p>Powered by <strong>Zaiko Hub</strong> · Check-in Expresso</p>
+    </footer>
+  </div>
+
+</body>
+</html>

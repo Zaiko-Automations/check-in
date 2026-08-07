@@ -1,0 +1,68 @@
+<% content_for :title, "Check-in Confirmado!" %>
+
+<div class="success-wrapper">
+  <div class="success-animation">
+    <div class="success-circle">
+      <svg class="success-check" viewBox="0 0 52 52" fill="none">
+        <circle class="success-circle-bg" cx="26" cy="26" r="25" stroke="#10b981" stroke-width="2"/>
+        <path class="success-check-path" d="M14 26 l8 8 l16-16" stroke="#10b981" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <h1 class="success-title">Check-in Confirmado!</h1>
+  <p class="success-message">
+    Suas informações foram recebidas com sucesso.<br>
+    A recepção foi notificada e irá chamá-lo em breve.
+  </p>
+
+  <div class="success-info-card">
+    <div class="success-info-row">
+      <span class="success-info-icon">📍</span>
+      <div>
+        <p class="success-info-label">Unidade</p>
+        <p class="success-info-value"><%= @unit.name %></p>
+      </div>
+    </div>
+    <div class="success-info-row">
+      <span class="success-info-icon">🕐</span>
+      <div>
+        <p class="success-info-label">Horário do check-in</p>
+        <p class="success-info-value"><%= Time.current.strftime('%H:%M') %> de <%= l(Date.current, format: :long) %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-tips">
+    <p class="tips-title">💡 Enquanto aguarda</p>
+    <ul class="tips-list">
+      <li>Fique atento ao chamado na recepção</li>
+      <li>Mantenha seus documentos originais em mãos</li>
+      <li>Em caso de dúvidas, dirija-se ao balcão de atendimento</li>
+    </ul>
+  </div>
+
+  <div class="success-footer-note">
+    <p>Obrigado por usar o <strong>Lab Walk-In</strong>. 😊</p>
+  </div>
+</div>
+
+<style>
+.success-circle-bg { fill: none; }
+.success-check-path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: draw-check 0.6s ease 0.4s forwards;
+}
+@keyframes draw-check {
+  to { stroke-dashoffset: 0; }
+}
+.success-circle {
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>

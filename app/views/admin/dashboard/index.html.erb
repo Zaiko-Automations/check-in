@@ -1,0 +1,52 @@
+<% content_for :page_title, "Fila de Espera" %>
+
+<div style="display: flex; gap: 16px; margin-bottom: 32px;">
+  <a href="<%= admin_root_path(status: 'pending') %>" class="btn <%= @status == 'pending' ? '' : 'btn-outline' %>">
+    Pendentes (<%= @counts[:pending] %>)
+  </a>
+  <a href="<%= admin_root_path(status: 'webhook_sent') %>" class="btn <%= @status == 'webhook_sent' ? '' : 'btn-outline' %>">
+    Em Processamento n8n (<%= @counts[:webhook_sent] %>)
+  </a>
+  <a href="<%= admin_root_path(status: 'completed') %>" class="btn <%= @status == 'completed' ? '' : 'btn-outline' %>">
+    Concluídos (<%= @counts[:completed] %>)
+  </a>
+</div>
+
+<div class="card">
+  <% if @walk_ins.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Paciente</th>
+          <th>CPF</th>
+          <th>Cobertura</th>
+          <th>Unidade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @walk_ins.each do |w| %>
+          <tr>
+            <td><%= w.created_at.strftime('%H:%M') %></td>
+            <td><strong><%= w.patient.nome %></strong></td>
+            <td><%= w.patient.cpf %></td>
+            <td>
+              <% if w.patient.particular? %>
+                <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Particular</span>
+              <% else %>
+                <span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><%= w.patient.convenio %></span>
+              <% end %>
+            </td>
+            <td><%= w.unit.name %></td>
+            <td>
+              <a href="<%= admin_walk_in_path(w) %>" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Ver Detalhes</a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p style="color: #64748b; text-align: center; padding: 40px 0;">Nenhum paciente nesta fila no momento.</p>
+  <% end %>
+</div>

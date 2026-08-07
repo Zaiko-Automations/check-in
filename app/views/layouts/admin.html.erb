@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= content_for?(:title) ? yield(:title) : "Painel Recepção | Lab Walk-In" %></title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      height: 100vh;
+      position: fixed;
+      padding: 24px 16px;
+    }
+    .sidebar h2 { font-size: 18px; margin-top: 0; margin-bottom: 32px; color: var(--primary); }
+    .nav-link {
+      display: block;
+      padding: 12px 16px;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .nav-link:hover { background: #f1f5f9; }
+    .nav-link.active { background: #eff6ff; color: var(--primary); }
+    
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 32px 48px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .user-info { font-size: 14px; color: var(--text-muted); }
+    
+    /* Utility */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .btn { background: var(--primary); color: white; padding: 10px 16px; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer;}
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 500; font-size: 13px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h2>Lab Walk-In</h2>
+    <nav>
+      <a href="<%= admin_root_path %>" class="nav-link <%= 'active' if controller_name == 'dashboard' %>">📋 Fila de Espera</a>
+      <a href="<%= admin_units_path %>" class="nav-link <%= 'active' if controller_name == 'units' %>">🏢 Unidades & QR Codes</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <h1><%= yield(:page_title) %></h1>
+      <div class="user-info">
+        <% if current_tenant %>
+          <strong>Tenant:</strong> <%= current_tenant.name %> | 
+        <% end %>
+        <%= current_user&.email %>
+      </div>
+    </header>
+
+    <% if notice %>
+      <div style="background: #ecfdf5; color: #065f46; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        <%= notice %>
+      </div>
+    <% end %>
+
+    <%= yield %>
+  </main>
+
+</body>
+</html>
