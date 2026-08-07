@@ -1,8 +1,21 @@
-#!/bin/bash -e
+#!/bin/sh
+set -e
 
-# If running the rails server then create or migrate existing database
-if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
-  ./bin/rails db:prepare
+echo "=== Check-in Expresso — Boot Check ==="
+echo "RAILS_ENV: ${RAILS_ENV}"
+echo "DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo YES || echo NO)"
+echo "SECRET_KEY_BASE set: $([ -n "$SECRET_KEY_BASE" ] && echo YES || echo NO)"
+echo "RAILS_MASTER_KEY set: $([ -n "$RAILS_MASTER_KEY" ] && echo YES || echo NO)"
+echo "======================================="
+
+# Aguarda o banco de dados estar pronto
+if [ -n "$DATABASE_URL" ]; then
+  echo "Aguardando PostgreSQL..."
+  until bin/rails runner "ActiveRecord::Base.connection.execute('SELECT 1')" 2>/dev/null; do
+    echo "  PostgreSQL ainda não pronto, aguardando 2s..."
+    sleep 2
+  done
+  echo "PostgreSQL pronto!"
 fi
 
-exec "${@}"
+exec "$@"
