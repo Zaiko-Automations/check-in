@@ -66,8 +66,7 @@ ENV RAILS_ENV=production \
 
 EXPOSE 3000
 
-# Healthcheck via /up
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:3000/up || exit 1
 
+
+ENTRYPOINT ["bin/docker-entrypoint"]
 CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
