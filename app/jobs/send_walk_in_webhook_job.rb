@@ -1,45 +1,56 @@
+require 'net/http'
+
 class SendWalkInWebhookJob < ApplicationJob
   queue_as :default
-
-  WEBHOOK_URL = 'https://auto.zaikohub.com.br/webhook/walk-in-333'.freeze
-  WEBHOOK_TOKEN = 'EAAm8baDUqp4BQ2MvMkpkTKO8wVWMeKrCz9fmCCZAmq8CWQ2dbUtAW4wIf9Yh'.freeze
 
   retry_on StandardError, wait: :polynomially_longer, attempts: 3
 
   def perform(walk_in_id)
+    # Read webhook config from DB (set via Admin > Configurações)
+    webhook_url  = AppSetting.webhook_url
+    webhook_auth = AppSetting.webhook_auth
+
+    unless webhook_url.present?
+      Rails.logger.info "[WalkIn Webhook] ⚠️  Webhook URL não configurada — pulando envio."
+      return
+    end
+
     walk_in = WalkIn.find(walk_in_id)
     patient = walk_in.patient
     unit    = walk_in.unit
-    tenant  = walk_in.tenant
 
-    payload = build_payload(walk_in, patient, unit, tenant)
+    payload = build_payload(walk_in, patient, unit)
+
+    headers = { 'Content-Type' => 'application/json' }
+    headers['Authorization'] = webhook_auth if webhook_auth.present?
 
     response = Net::HTTP.post(
-      URI(WEBHOOK_URL),
+      URI(webhook_url),
       payload.to_json,
-      'Content-Type'  => 'application/json',
-      'Authorization' => WEBHOOK_TOKEN
+      headers
     )
 
     if response.is_a?(Net::HTTPSuccess)
       walk_in.update!(status: 'webhook_sent', webhook_sent_at: Time.current)
-      Rails.logger.info "[WalkIn Webhook] ✅ Sent walk_in ##{walk_in.uid} — HTTP #{response.code}"
+      Rails.logger.info "[WalkIn Webhook] ✅ Enviado walk_in ##{walk_in.uid} — HTTP #{response.code}"
     else
       walk_in.update!(status: 'failed', webhook_error: "HTTP #{response.code}: #{response.body.truncate(300)}")
-      Rails.logger.error "[WalkIn Webhook] ❌ Failed walk_in ##{walk_in.uid} — HTTP #{response.code}: #{response.body}"
-      raise "Webhook failed with HTTP #{response.code}"
+      Rails.logger.error "[WalkIn Webhook] ❌ Falha walk_in ##{walk_in.uid} — HTTP #{response.code}: #{response.body}"
+      raise "Webhook falhou com HTTP #{response.code}"
     end
   end
 
   private
 
-  def build_payload(walk_in, patient, unit, tenant)
-    cobertura = if patient.convenio?
+  def build_payload(walk_in, patient, unit)
+    lab_name = AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso')
+
+    cobertura = if patient.cobertura_tipo == 'convenio'
       {
-        tipo:             'convenio',
-        convenio:         patient.convenio,
-        plano:            patient.plano.presence,
-        numero_carteira:  patient.numero_carteira.presence,
+        tipo:              'convenio',
+        convenio:          patient.convenio,
+        plano:             patient.plano.presence,
+        numero_carteira:   patient.numero_carteira.presence,
         validade_carteira: patient.validade_carteira&.strftime('%Y-%m-%d')
       }
     else
@@ -47,13 +58,13 @@ class SendWalkInWebhookJob < ApplicationJob
     end
 
     {
-      event:      'walk_in.submitted',
-      walk_in_id: walk_in.uid,
+      event:        'walk_in.submitted',
+      walk_in_id:   walk_in.uid,
       submitted_at: walk_in.created_at.iso8601,
 
-      tenant: {
-        subdomain: tenant.subdomain,
-        name:      tenant.name
+      laboratorio: {
+        nome: lab_name,
+        host: ENV.fetch('APP_HOST', 'check-in.zaikohub.com.br')
       },
 
       unit: {

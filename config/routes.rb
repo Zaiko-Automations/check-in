@@ -16,6 +16,15 @@ Rails.application.routes.draw do
         patch :complete
       end
     end
+    # Configurações de webhook e identidade do laboratório
+    resource :settings, only: [:edit, :update]
+  end
+
+  # ─── API pública (dashboard central consulta cada instância) ─────────────────
+  namespace :api do
+    namespace :v1 do
+      get 'stats', to: 'stats#show'
+    end
   end
 
   # Redirect root to admin

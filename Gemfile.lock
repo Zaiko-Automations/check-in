@@ -80,8 +80,6 @@ GEM
       mutex_m
       securerandom (>= 0.3)
       tzinfo (~> 2.0)
-    acts_as_tenant (1.0.1)
-      rails (>= 6.0)
     aws-eventstream (1.4.0)
     aws-partitions (1.1279.0)
     aws-sdk-core (3.254.1)
@@ -337,7 +335,6 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  acts_as_tenant
   aws-sdk-s3
   bootsnap
   debug
@@ -370,7 +367,6 @@ CHECKSUMS
   activerecord (7.1.6) sha256=1aa298cd7fc97ed8639ebb05a46bd17243a1218d89945bdc2bac1e61e673f079
   activestorage (7.1.6) sha256=2f1acb8e6592ba783d9cbc3da93ac4477d441dffc5d533ceccbbfab39f4bf398
   activesupport (7.1.6) sha256=7f12140a813b1c4922a322663e547129aef1840fc512fa262378f6d7e7fd3a7c
-  acts_as_tenant (1.0.1) sha256=6944e4d64533337938a8817a6b4ff9b11189c9dcc0b1333bb89f3821a4c14c53
   aws-eventstream (1.4.0) sha256=116bf85c436200d1060811e6f5d2d40c88f65448f2125bc77ffce5121e6e183b
   aws-partitions (1.1279.0) sha256=9baa4f75bca3e5efe4d4df27655ae640aaaa1f6e2d3cf59fda3dad19689ae435
   aws-sdk-core (3.254.1) sha256=518089e32134c3478cd4ec63d07fb966546a45e9e4cbf5f80d2cf16d5699d29b

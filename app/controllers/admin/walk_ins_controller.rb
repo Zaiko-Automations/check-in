@@ -7,7 +7,6 @@ module Admin
     end
 
     def complete
-      # Endpoint para a recepcionista marcar o atendimento como concluído
       if @walk_in.update(status: 'completed')
         redirect_to admin_root_path, notice: "Atendimento concluído com sucesso."
       else
@@ -18,7 +17,7 @@ module Admin
     private
 
     def set_walk_in
-      @walk_in = current_tenant.walk_ins.find(params[:id])
+      @walk_in = WalkIn.find(params[:id])
     end
   end
 end

@@ -7,7 +7,6 @@ module Admin
     end
 
     def show
-      # Shows unit details + QR code (SVG)
       @qr_svg = @unit.qr_svg
     end
 
@@ -17,7 +16,6 @@ module Admin
 
     def create
       @unit = Unit.new(unit_params)
-      @unit.tenant = current_tenant
 
       if @unit.save
         redirect_to admin_unit_path(@unit), notice: "Unidade criada com sucesso! QR code disponível abaixo."

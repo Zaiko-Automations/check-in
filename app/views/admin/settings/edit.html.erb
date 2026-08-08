@@ -1,0 +1,109 @@
+<% content_for :page_title, "Configurações" %>
+
+<div class="page-header" style="margin-bottom: 32px;">
+  <h1 class="page-title">⚙️ Configurações</h1>
+  <p class="page-subtitle">Configure a integração do Check-in Expresso com seu sistema</p>
+</div>
+
+<% if notice %>
+  <div class="alert alert-success" style="margin-bottom: 24px; padding: 16px 20px; background: rgba(35,192,181,0.15); border: 1px solid #23c0b5; border-radius: 12px; color: #23c0b5; font-weight: 500;">
+    ✅ <%= notice %>
+  </div>
+<% end %>
+
+<%= form_with url: admin_settings_path, method: :patch, local: true do |f| %>
+  <div style="display: grid; gap: 32px; max-width: 720px;">
+
+    <%# ── IDENTIDADE ─────────────────────────────── %>
+    <div class="card">
+      <div class="card-header">
+        <h2 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0;">
+          🏥 Identidade do Laboratório
+        </h2>
+      </div>
+      <div class="card-body" style="padding: 24px; display: grid; gap: 20px;">
+        <div class="form-group">
+          <label class="form-label" for="lab_name">Nome do Laboratório</label>
+          <input
+            type="text"
+            id="lab_name"
+            name="lab_name"
+            class="form-control"
+            value="<%= @lab_name %>"
+            placeholder="Ex: Laboratório Centro"
+          >
+          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
+            Aparece no cabeçalho do painel e nos dados enviados ao webhook.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <%# ── WEBHOOK ─────────────────────────────────── %>
+    <div class="card">
+      <div class="card-header">
+        <h2 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0;">
+          🔗 Integração via Webhook
+        </h2>
+      </div>
+      <div class="card-body" style="padding: 24px; display: grid; gap: 20px;">
+
+        <div class="form-group">
+          <label class="form-label" for="webhook_url">URL do Webhook</label>
+          <input
+            type="url"
+            id="webhook_url"
+            name="webhook_url"
+            class="form-control"
+            value="<%= @webhook_url %>"
+            placeholder="https://n8n.suaempresa.com.br/webhook/checkin"
+          >
+          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
+            Para onde os dados do check-in serão enviados (n8n, Make, Zapier, etc). Deixe vazio para desativar o envio.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="webhook_auth">
+            Authorization Header
+            <span style="color: var(--text-muted); font-weight: 400; font-size: 0.8rem;">(opcional)</span>
+          </label>
+          <input
+            type="text"
+            id="webhook_auth"
+            name="webhook_auth"
+            class="form-control"
+            value="<%= @webhook_auth %>"
+            placeholder="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            autocomplete="off"
+          >
+          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
+            Enviado como cabeçalho <code>Authorization</code>. Suporta Bearer token ou qualquer outro valor.
+          </small>
+        </div>
+
+        <%# Status atual do webhook %>
+        <div style="background: rgba(0,43,71,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px;">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 8px;">Status atual da integração:</p>
+          <% if @webhook_url.present? %>
+            <span style="display: inline-flex; align-items: center; gap: 8px; color: #23c0b5; font-size: 0.9rem; font-weight: 500;">
+              ✅ Webhook configurado → <code style="font-size: 0.8rem; opacity: 0.8;"><%= @webhook_url.truncate(60) %></code>
+            </span>
+          <% else %>
+            <span style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9rem;">
+              ⚠️ Nenhum webhook configurado — os dados do check-in não serão enviados automaticamente.
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# ── AÇÕES ───────────────────────────────────── %>
+    <div style="display: flex; justify-content: flex-end;">
+      <button type="submit" class="btn btn-primary" style="padding: 14px 32px; font-size: 1rem;">
+        💾 Salvar Configurações
+      </button>
+    </div>
+
+  </div>
+<% end %>

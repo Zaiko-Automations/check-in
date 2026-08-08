@@ -19,8 +19,7 @@ gem "image_processing", "~> 1.2"
 # Authentication (admin panel)
 gem "devise"
 
-# Multi-tenant scoping by subdomain
-gem "acts_as_tenant"
+
 
 # QR Code generation (SVG)
 gem "rqrcode"

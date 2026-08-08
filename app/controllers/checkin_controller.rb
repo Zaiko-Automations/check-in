@@ -8,16 +8,14 @@ class CheckinController < ApplicationController
   end
 
   def create
-    @walk_in = WalkIn.new(tenant: current_tenant, unit: @unit)
+    @walk_in = WalkIn.new(unit: @unit)
 
     ActiveRecord::Base.transaction do
       @walk_in.save!
 
-      # Build patient record
       @patient = @walk_in.build_patient(patient_params)
       @patient.save!
 
-      # Attach images if provided
       if params[:carteira_convenio].present?
         @walk_in.carteira_convenio.attach(params[:carteira_convenio])
       end
@@ -27,7 +25,6 @@ class CheckinController < ApplicationController
       end
     end
 
-    # Enqueue webhook to n8n (async, with retry)
     SendWalkInWebhookJob.perform_later(@walk_in.id)
 
     redirect_to checkin_success_path(token: @unit.token), notice: "Check-in confirmado!"

@@ -1,36 +1,36 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
+# Seeds — Check-in Expresso
+# Idempotente: pode ser re-executado sem duplicar registros.
 
-puts "Limpando banco de dados..."
-Patient.destroy_all
-WalkIn.destroy_all
-Unit.destroy_all
-Tenant.destroy_all
+puts "═══ Check-in Expresso — Seeds ═══"
 
-puts "Criando tenant padrão (Lab Centro)..."
-tenant = Tenant.create!(
-  name: "Laboratório Centro",
-  subdomain: "labcentro",
-  active: true
-)
+# ─── Usuário admin padrão ────────────────────────────────────────────────────
+admin_email    = ENV.fetch('ADMIN_EMAIL', 'admin@checkin.local')
+admin_password = ENV.fetch('ADMIN_PASSWORD', 'Checkin@2026!')
 
-puts "Criando unidades físicas..."
-unit1 = Unit.create!(
-  tenant: tenant,
-  name: "Matriz Centro",
-  address: "Av. Principal, 1000",
-  city: "São Paulo",
-  active: true
-)
+if User.find_by(email: admin_email).nil?
+  User.create!(
+    email:                 admin_email,
+    password:              admin_password,
+    password_confirmation: admin_password
+  )
+  puts "✅ Usuário admin criado: #{admin_email}"
+else
+  puts "ℹ️  Usuário admin já existe: #{admin_email}"
+end
 
-unit2 = Unit.create!(
-  tenant: tenant,
-  name: "Filial Sul",
-  address: "Rua do Sul, 500",
-  city: "São Paulo",
-  active: true
-)
+# ─── Unidade padrão (se nenhuma existir) ─────────────────────────────────────
+if Unit.none?
+  lab_name = ENV.fetch('LAB_NAME', 'Check-in Expresso')
+  unit = Unit.create!(
+    name:    "Recepção Principal",
+    address: "",
+    city:    "",
+    active:  true
+  )
+  puts "✅ Unidade padrão criada: #{unit.name}"
+  puts "   QR Code URL: #{unit.checkin_url}"
+else
+  puts "ℹ️  Unidades já existem (#{Unit.count}), pulando criação."
+end
 
-puts "Concluído! Subdomínio para teste local: ?tenant=labcentro"
-puts "URL da Unidade 1: #{unit1.checkin_url(host: 'localhost:3000')}"
-puts "URL da Unidade 2: #{unit2.checkin_url(host: 'localhost:3000')}"
+puts "═══ Seeds concluídos! ═══"
