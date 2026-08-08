@@ -70,6 +70,7 @@ class SendWalkInWebhookJob < ApplicationJob
     {
       event:        webhook_type == 'extraction' ? 'walk_in.submitted' : 'walk_in.validated',
       walk_in_id:   walk_in.uid,
+      id:           walk_in.id,
       submitted_at: walk_in.created_at.iso8601,
 
       laboratorio: {
