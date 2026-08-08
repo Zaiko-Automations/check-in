@@ -1,10 +1,14 @@
 class WalkIn < ApplicationRecord
   belongs_to :unit
   has_one :patient, dependent: :destroy
+  has_many :requested_exams, dependent: :destroy
+  accepts_nested_attributes_for :patient
+  accepts_nested_attributes_for :requested_exams, allow_destroy: true
 
   # Images stored in Cloudflare R2
   has_one_attached :carteira_convenio
   has_one_attached :requisicao_medica
+  has_one_attached :documento
 
   before_create :generate_uid
 
@@ -30,6 +34,11 @@ class WalkIn < ApplicationRecord
   def requisicao_medica_url
     return nil unless requisicao_medica.attached?
     Rails.application.routes.url_helpers.rails_blob_url(requisicao_medica, host: app_host)
+  end
+
+  def documento_url
+    return nil unless documento.attached?
+    Rails.application.routes.url_helpers.rails_blob_url(documento, host: app_host)
   end
 
   private

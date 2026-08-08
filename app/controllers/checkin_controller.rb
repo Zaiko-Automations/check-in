@@ -13,15 +13,24 @@ class CheckinController < ApplicationController
     ActiveRecord::Base.transaction do
       @walk_in.save!
 
-      @patient = @walk_in.build_patient(patient_params)
+      # Build patient record and default city
+      patient_data = patient_params
+      patient_data[:cidade_atendimento] = @unit.city if patient_data[:cidade_atendimento].blank?
+
+      @patient = @walk_in.build_patient(patient_data)
       @patient.save!
 
+      # Attach images if provided
       if params[:carteira_convenio].present?
         @walk_in.carteira_convenio.attach(params[:carteira_convenio])
       end
 
       if params[:requisicao_medica].present?
         @walk_in.requisicao_medica.attach(params[:requisicao_medica])
+      end
+
+      if params[:documento].present?
+        @walk_in.documento.attach(params[:documento])
       end
     end
 
@@ -49,7 +58,7 @@ class CheckinController < ApplicationController
   def patient_params
     params.permit(
       :nome, :cpf, :data_nascimento, :sexo_biologico,
-      :telefone, :whatsapp,
+      :telefone, :whatsapp, :cidade_atendimento,
       :cobertura_tipo,
       :convenio, :plano, :numero_carteira, :validade_carteira
     )

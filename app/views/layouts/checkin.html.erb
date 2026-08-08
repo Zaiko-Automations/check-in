@@ -30,8 +30,10 @@
         </div>
         <div class="logo-text">
           <span class="logo-name">Check-in Expresso</span>
-          <% if current_tenant %>
-            <span class="logo-unit"><%= @unit&.name || current_tenant.name %></span>
+          <% if @unit %>
+            <span class="logo-unit"><%= @unit.name %></span>
+          <% else %>
+            <span class="logo-unit"><%= AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso') %></span>
           <% end %>
         </div>
       </div>

@@ -15,7 +15,8 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: 'dashboard#index'
     resources :units
-    resources :walk_ins, only: [:index, :show] do
+    resources :users, only: [:index, :edit, :update]
+    resources :walk_ins, only: [:index, :show, :update, :destroy] do
       member do
         patch :complete
       end

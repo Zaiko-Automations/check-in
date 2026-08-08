@@ -84,9 +84,12 @@ class SendWalkInWebhookJob < ApplicationJob
 
       cobertura: cobertura,
 
+      exams: walk_in.requested_exams.map { |e| { codigo: e.codigo, descricao: e.descricao, acuracia: e.acuracia } },
+
       documents: {
         carteira_convenio: walk_in.carteira_convenio_url,
-        requisicao_medica: walk_in.requisicao_medica_url
+        requisicao_medica: walk_in.requisicao_medica_url,
+        documento:         walk_in.documento_url
       }
     }
   end

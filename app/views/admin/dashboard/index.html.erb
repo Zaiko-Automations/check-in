@@ -1,52 +1,146 @@
 <% content_for :page_title, "Fila de Espera" %>
 
-<div style="display: flex; gap: 16px; margin-bottom: 32px;">
-  <a href="<%= admin_root_path(status: 'pending') %>" class="btn <%= @status == 'pending' ? '' : 'btn-outline' %>">
-    Pendentes (<%= @counts[:pending] %>)
-  </a>
-  <a href="<%= admin_root_path(status: 'webhook_sent') %>" class="btn <%= @status == 'webhook_sent' ? '' : 'btn-outline' %>">
-    Em Processamento n8n (<%= @counts[:webhook_sent] %>)
-  </a>
-  <a href="<%= admin_root_path(status: 'completed') %>" class="btn <%= @status == 'completed' ? '' : 'btn-outline' %>">
-    Concluídos (<%= @counts[:completed] %>)
-  </a>
-</div>
+<div class="w-full flex-grow flex flex-col">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Fila de Revisão de Pedidos</h2>
+      <p class="text-sm text-slate-500 mt-1">Conferência e validação de check-ins recebidos.</p>
+    </div>
+    
+    <!-- Search -->
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <%= form_tag admin_root_path, method: :get, class: "w-full sm:w-auto flex shadow-sm rounded-xl overflow-hidden border border-slate-200 bg-white" do %>
+        <%= hidden_field_tag :status, @status %>
+        <input type="text" name="search" value="<%= params[:search] %>" placeholder="Buscar por nome, CPF ou ID..." 
+               class="w-full sm:w-64 px-4 py-2 focus:outline-none text-sm bg-transparent">
+        <button type="submit" class="bg-primary hover:bg-primary-hover text-white px-5 py-2 text-sm font-semibold transition-all cursor-pointer">
+          Buscar
+        </button>
+      <% end %>
+      
+      <% if params[:search].present? || params[:status].present? %>
+        <%= link_to "Limpar filtros", admin_root_path, class: "text-xs text-slate-500 hover:text-primary transition-colors underline" %>
+      <% end %>
+    </div>
+  </div>
 
-<div class="card">
+  <!-- Status Tabs -->
+  <div class="flex border-b border-slate-200 mb-6 gap-2">
+    <%= link_to admin_root_path(status: 'pending', search: params[:search]), 
+                class: "px-5 py-3 text-sm font-bold border-b-2 transition-all #{@status == 'pending' ? 'border-secondary text-secondary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300'}" do %>
+      Pendentes
+      <span class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-600">
+        <%= @counts[:pending] %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_root_path(status: 'webhook_sent', search: params[:search]), 
+                class: "px-5 py-3 text-sm font-bold border-b-2 transition-all #{@status == 'webhook_sent' ? 'border-secondary text-secondary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300'}" do %>
+      Processando n8n
+      <span class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-600">
+        <%= @counts[:webhook_sent] %>
+      </span>
+    <% end %>
+    
+    <%= link_to admin_root_path(status: 'completed', search: params[:search]), 
+                class: "px-5 py-3 text-sm font-bold border-b-2 transition-all #{@status == 'completed' ? 'border-secondary text-secondary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300'}" do %>
+      Concluídos
+      <span class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-600">
+        <%= @counts[:completed] %>
+      </span>
+    <% end %>
+  </div>
+
+  <!-- Table -->
   <% if @walk_ins.any? %>
-    <table>
-      <thead>
-        <tr>
-          <th>Horário</th>
-          <th>Paciente</th>
-          <th>CPF</th>
-          <th>Cobertura</th>
-          <th>Unidade</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @walk_ins.each do |w| %>
-          <tr>
-            <td><%= w.created_at.strftime('%H:%M') %></td>
-            <td><strong><%= w.patient.nome %></strong></td>
-            <td><%= w.patient.cpf %></td>
-            <td>
-              <% if w.patient.particular? %>
-                <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Particular</span>
-              <% else %>
-                <span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><%= w.patient.convenio %></span>
-              <% end %>
-            </td>
-            <td><%= w.unit.name %></td>
-            <td>
-              <a href="<%= admin_walk_in_path(w) %>" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Ver Detalhes</a>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50/50">
+            <tr>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">ID</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Paciente</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Tipo de Pedido</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Data</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Link Conversa</th>
+              <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            <% @walk_ins.each do |w| %>
+              <tr class="hover:bg-slate-50/50 transition-colors">
+                <!-- ID -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                  #<%= w.id %>
+                </td>
+                
+                <!-- Patient Name & CPF -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm tracking-tight shrink-0 uppercase">
+                      <%= w.patient.nome.to_s.split.map(&:first).join.first(2).upcase %>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-slate-800 uppercase"><%= w.patient.nome %></span>
+                      <span class="text-xs text-slate-500 mt-0.5">CPF: <%= w.patient.cpf %></span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Cobertura / Tipo de Pedido -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if w.patient.particular? %>
+                    <span class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm">Particular</span>
+                  <% else %>
+                    <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"><%= w.patient.convenio %></span>
+                  <% end %>
+                </td>
+
+                <!-- Cidade -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                  <%= w.patient.cidade_atendimento.presence || w.unit.city.presence || "(não informada)" %>
+                </td>
+
+                <!-- Data -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                  <%= w.created_at.strftime('%d/%m/%Y, %H:%M') %>
+                </td>
+
+                <!-- Link Conversa -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if w.link_conversa.present? %>
+                    <%= link_to w.link_conversa, target: "_blank", class: "inline-flex items-center justify-center px-4 py-2 bg-[#002b47] hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm gap-2" do %>
+                      💬 Conversa
+                    <% end %>
+                  <% else %>
+                    <span class="text-xs text-slate-400 font-mono">Sem link</span>
+                  <% end %>
+                </td>
+
+                <!-- Conferência button -->
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
+                    <%= link_to admin_walk_in_path(w), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-lg text-xs font-bold hover:bg-secondary-hover transition-colors shadow-sm" do %>
+                      🔍 Conferir
+                    <% end %>
+                    <% if w.pending? %>
+                      <%= button_to admin_walk_in_path(w), method: :delete, data: { confirm: 'Tem certeza que deseja excluir?' }, class: "p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer" do %>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
   <% else %>
-    <p style="color: #64748b; text-align: center; padding: 40px 0;">Nenhum paciente nesta fila no momento.</p>
+    <div class="bg-white rounded-2xl border border-slate-200 py-16 px-6 text-center shadow-sm">
+      <p class="text-slate-500 font-medium">Nenhum paciente nesta fila no momento.</p>
+    </div>
   <% end %>
 </div>

@@ -3,101 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= content_for?(:title) ? yield(:title) : "Painel Recepção | Lab Walk-In" %></title>
+  <title><%= content_for?(:title) ? yield(:title) : "Painel | Check-in Expresso" %></title>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#002b47',
+              hover: '#001f33'
+            },
+            secondary: {
+              DEFAULT: '#23c0b5',
+              hover: '#1ca39a'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --primary: #2563eb;
-      --bg: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-    }
-    .sidebar {
-      width: 260px;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      height: 100vh;
-      position: fixed;
-      padding: 24px 16px;
-    }
-    .sidebar h2 { font-size: 18px; margin-top: 0; margin-bottom: 32px; color: var(--primary); }
-    .nav-link {
-      display: block;
-      padding: 12px 16px;
-      color: var(--text);
-      text-decoration: none;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    .nav-link:hover { background: #f1f5f9; }
-    .nav-link.active { background: #eff6ff; color: var(--primary); }
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; }
     
-    .main-content {
-      margin-left: 260px;
-      flex: 1;
-      padding: 32px 48px;
-    }
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
-    }
-    .user-info { font-size: 14px; color: var(--text-muted); }
+    /* Legacy / Backwards Compatibility styles */
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); }
+    .btn { background: #002b47; color: white; padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn:hover { background: #001f33; }
+    .btn-outline { background: white; border: 1px solid #cbd5e1; color: #334155; }
+    .btn-outline:hover { background: #f8fafc; }
     
-    /* Utility */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-    .btn { background: var(--primary); color: white; padding: 10px 16px; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer;}
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { color: var(--text-muted); font-weight: 500; font-size: 13px; text-transform: uppercase; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-control { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .form-control:focus { border-color: #23c0b5; box-shadow: 0 0 0 3px rgba(35, 192, 181, 0.15); }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex">
 
-  <aside class="sidebar">
-    <h2><%= AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso') %></h2>
-    <nav>
-      <a href="<%= admin_root_path %>" class="nav-link <%= 'active' if controller_name == 'dashboard' %>">📋 Fila de Espera</a>
-      <a href="<%= admin_units_path %>" class="nav-link <%= 'active' if controller_name == 'units' %>">🏢 Unidades & QR Codes</a>
-      <a href="<%= edit_admin_settings_path %>" class="nav-link <%= 'active' if controller_name == 'settings' %>">⚙️ Configurações</a>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed top-0 left-0 z-40">
+    <!-- Brand / Logo -->
+    <div class="h-16 px-6 border-b border-slate-100 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center font-bold text-white shadow-sm font-heading">
+        C
+      </div>
+      <div class="min-w-0 flex-1">
+        <h2 class="text-sm font-bold text-slate-800 tracking-tight leading-tight uppercase truncate">
+          <%= AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso') %>
+        </h2>
+        <span class="text-[10px] text-secondary font-semibold tracking-wide uppercase">Painel Administrativo</span>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-grow p-4 space-y-1">
+      <a href="<%= admin_root_path %>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all <%= controller_name == 'dashboard' || controller_name == 'walk_ins' ? 'bg-secondary/10 text-secondary font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <span>📋</span> Fila de Pedidos
+      </a>
+      <a href="<%= admin_units_path %>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all <%= controller_name == 'units' ? 'bg-secondary/10 text-secondary font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <span>🏢</span> Unidades
+      </a>
+      <a href="<%= admin_users_path %>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all <%= controller_name == 'users' ? 'bg-secondary/10 text-secondary font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <span>👥</span> Usuários
+      </a>
+      <a href="<%= edit_admin_settings_path %>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all <%= controller_name == 'settings' ? 'bg-secondary/10 text-secondary font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <span>⚙️</span> Configurações
+      </a>
     </nav>
+
+    <!-- User / Profile -->
+    <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-slate-700 truncate"><%= current_user&.email %></span>
+          <% if current_user&.unit %>
+            <span class="text-[10px] text-secondary font-medium truncate"><%= current_user.unit.name %></span>
+          <% else %>
+            <span class="text-[10px] text-slate-400 font-medium truncate">Acesso Geral</span>
+          <% end %>
+        </div>
+        <%= button_to destroy_user_session_path, method: :delete, class: "p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer" do %>
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+        <% end %>
+      </div>
+    </div>
   </aside>
 
-  <main class="main-content">
-    <header class="topbar">
-      <h1><%= yield(:page_title) %></h1>
-      <div class="user-info">
-        <%= current_user&.email %>
-      </div>
-    </header>
-
-    <% if notice %>
-      <div style="background: #ecfdf5; color: #065f46; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-        <%= notice %>
-      </div>
-    <% end %>
-
-    <%= yield %>
-  </main>
+  <!-- Main Content Area -->
+  <div class="flex-grow pl-64 flex flex-col min-h-screen">
+    <main class="flex-grow p-8 flex flex-col w-full">
+      <%= yield %>
+    </main>
+  </div>
 
 </body>
 </html>

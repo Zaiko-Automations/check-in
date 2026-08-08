@@ -1,88 +1,562 @@
-<% content_for :page_title, "Detalhes do Atendimento" %>
+<%
+  patient = @walk_in.patient
+  is_readonly = @walk_in.completed?
+  section_title_class = "text-xs font-bold uppercase tracking-wider border-b border-slate-100 pb-2 text-[#23c0b5]"
+%>
 
-<div style="margin-bottom: 24px;">
-  <a href="<%= admin_root_path %>" class="btn btn-outline">← Voltar para Fila</a>
-</div>
+<% content_for :title, "Revisão — #{patient.nome}" %>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-  
-  <!-- Coluna 1: Dados do Paciente e Check-in -->
-  <div>
-    <div class="card" style="margin-bottom: 24px;">
-      <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Informações do Paciente</h3>
-      
-      <table style="width: 100%; border: none;">
-        <tr><td style="padding: 8px 0; border: none;"><strong>Nome:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.nome %></td></tr>
-        <tr><td style="padding: 8px 0; border: none;"><strong>CPF:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.cpf %></td></tr>
-        <tr><td style="padding: 8px 0; border: none;"><strong>Nascimento:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.data_nascimento.strftime("%d/%m/%Y") %></td></tr>
-        <tr><td style="padding: 8px 0; border: none;"><strong>Sexo:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.sexo_biologico %></td></tr>
-        <tr><td style="padding: 8px 0; border: none;"><strong>Telefone:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.telefone %> <%= @patient.whatsapp ? "✅ (WhatsApp)" : "" %></td></tr>
-      </table>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Detalhes da Cobertura</h3>
-      
-      <table style="width: 100%; border: none;">
-        <tr><td style="padding: 8px 0; border: none; width: 120px;"><strong>Tipo:</strong></td>
-            <td style="padding: 8px 0; border: none;">
-              <% if @patient.particular? %>
-                <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 13px;">Particular</span>
-              <% else %>
-                <span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 4px; font-size: 13px;">Convênio</span>
-              <% end %>
-            </td>
-        </tr>
-        <% if @patient.convenio? %>
-          <tr><td style="padding: 8px 0; border: none;"><strong>Convênio:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.convenio %></td></tr>
-          <tr><td style="padding: 8px 0; border: none;"><strong>Plano:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.plano.presence || '-' %></td></tr>
-          <tr><td style="padding: 8px 0; border: none;"><strong>Carteira:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.numero_carteira.presence || '-' %></td></tr>
-          <tr><td style="padding: 8px 0; border: none;"><strong>Validade:</strong></td><td style="padding: 8px 0; border: none;"><%= @patient.validade_carteira&.strftime("%d/%m/%Y") || '-' %></td></tr>
-        <% end %>
-      </table>
-    </div>
-  </div>
-
-  <!-- Coluna 2: Imagens -->
-  <div class="card">
-    <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 20px;">Documentos Anexados</h3>
-    
-    <% if @walk_in.carteira_convenio.attached? %>
-      <div style="margin-bottom: 24px;">
-        <strong>Carteirinha do Convênio:</strong>
-        <div style="margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-          <%= image_tag @walk_in.carteira_convenio, style: "width: 100%; max-height: 250px; object-fit: contain; background: #f8fafc;" %>
-        </div>
-      </div>
-    <% else %>
-      <% if @patient.convenio? %>
-        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Nenhuma carteirinha enviada.</p>
+<div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow flex flex-col">
+  <!-- Header / Navigation -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 mb-6 gap-4">
+    <div class="flex items-center gap-3 mt-1">
+      <h2 class="text-2xl font-bold text-slate-900 font-heading">Revisão de Dados</h2>
+      <% if @walk_in.pending? %>
+        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Aguardando Validação</span>
+      <% elsif @walk_in.webhook_sent? %>
+        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Enviado ao n8n</span>
+      <% else %>
+        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Concluído</span>
       <% end %>
-    <% end %>
+    </div>
 
-    <% if @walk_in.requisicao_medica.attached? %>
-      <div style="margin-bottom: 24px;">
-        <strong>Requisição / Pedido Médico:</strong>
-        <div style="margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-          <%= image_tag @walk_in.requisicao_medica, style: "width: 100%; max-height: 400px; object-fit: contain; background: #f8fafc;" %>
+    <div class="flex items-center gap-3">
+      <%= link_to admin_root_path, class: "px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl border border-slate-300 transition-colors shadow-sm cursor-pointer" do %>
+        Voltar para a Fila
+      <% end %>
+    </div>
+  </div>
+
+  <% if is_readonly %>
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <p class="font-bold">Este atendimento já foi concluído!</p>
+          <p class="text-sm text-emerald-700">Revisado e validado em <%= @walk_in.updated_at.strftime("%d/%m/%Y às %H:%M") %>.</p>
         </div>
       </div>
-    <% else %>
-      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Nenhum pedido médico enviado.</p>
-    <% end %>
-
-  </div>
-</div>
-
-<div class="card" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-  <div>
-    <strong>Status atual:</strong> 
-    <span style="background: <%= @walk_in.status == 'completed' ? '#ecfdf5' : '#eff6ff' %>; color: <%= @walk_in.status == 'completed' ? '#065f46' : '#2563eb' %>; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-left: 8px;">
-      <%= @walk_in.status.upcase %>
-    </span>
-  </div>
-  
-  <% if @walk_in.status != 'completed' %>
-    <%= button_to "Marcar como Concluído", complete_admin_walk_in_path(@walk_in), method: :patch, class: "btn", style: "background: #10b981;" %>
+      <div class="text-xs font-mono bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg">
+        ID: <%= @walk_in.uid %>
+      </div>
+    </div>
   <% end %>
+
+  <!-- Main Container: Side-by-Side -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-grow">
+    
+    <!-- LEFT PANEL: Image Viewer -->
+    <div class="lg:col-span-6 flex flex-col gap-4 lg:sticky lg:top-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+        <h3 class="text-sm font-bold text-slate-800 font-heading mb-3 uppercase tracking-wide">Documentos Recebidos</h3>
+        
+        <!-- Image Selector Tabs -->
+        <div class="flex border-b border-slate-100 pb-3 gap-2" id="doc-tabs">
+          <!-- Requisicao Medica -->
+          <button type="button" onclick="selectImage('requisicao_medica')" id="tab-requisicao_medica"
+                  class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer">
+            Pedido Médico
+            <% if @walk_in.requisicao_medica.attached? %>
+              <span class="block text-[9px] text-emerald-500 font-normal">Anexo ok</span>
+            <% else %>
+              <span class="block text-[9px] text-slate-400 font-normal">Não enviado</span>
+            <% end %>
+          </button>
+          
+          <!-- Documento (RG/CNH) -->
+          <button type="button" onclick="selectImage('documento')" id="tab-documento"
+                  class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer">
+            Documento (ID)
+            <% if @walk_in.documento.attached? %>
+              <span class="block text-[9px] text-emerald-500 font-normal">Anexo ok</span>
+            <% else %>
+              <span class="block text-[9px] text-slate-400 font-normal">Não enviado</span>
+            <% end %>
+          </button>
+          
+          <!-- Carteira Convenio -->
+          <button type="button" onclick="selectImage('carteira_convenio')" id="tab-carteira_convenio"
+                  class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer">
+            Carteirinha
+            <% if @walk_in.carteira_convenio.attached? %>
+              <span class="block text-[9px] text-emerald-500 font-normal">Anexo ok</span>
+            <% else %>
+              <span class="block text-[9px] text-slate-400 font-normal">Não enviado</span>
+            <% end %>
+          </button>
+        </div>
+
+        <!-- Viewer Area -->
+        <div class="mt-4 border border-slate-800 rounded-xl overflow-hidden h-[600px] flex items-center justify-center group relative bg-[#002b47]" id="viewer-container">
+          <!-- Image Zoom Container -->
+          <div id="image-zoom-box" class="origin-center cursor-grab active:cursor-grabbing w-full h-full flex items-center justify-center relative" style="transform: scale(1.0) translate(0px, 0px);">
+            <!-- Drawing Canvas Overlay -->
+            <canvas id="drawing-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10"></canvas>
+
+            <% if @walk_in.requisicao_medica.attached? %>
+              <img id="img-requisicao_medica" src="<%= url_for(@walk_in.requisicao_medica) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none relative z-0">
+            <% else %>
+              <div id="img-requisicao_medica" class="text-slate-400 text-sm p-6 text-center">
+                ⚠️ Nenhum Pedido Médico enviado.
+              </div>
+            <% end %>
+
+            <% if @walk_in.documento.attached? %>
+              <img id="img-documento" src="<%= url_for(@walk_in.documento) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0">
+            <% else %>
+              <div id="img-documento" class="text-slate-400 text-sm hidden p-6 text-center">
+                ⚠️ Nenhum Documento de Identidade enviado.
+              </div>
+            <% end %>
+
+            <% if @walk_in.carteira_convenio.attached? %>
+              <img id="img-carteira_convenio" src="<%= url_for(@walk_in.carteira_convenio) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0">
+            <% else %>
+              <div id="img-carteira_convenio" class="text-slate-400 text-sm hidden p-6 text-center">
+                ⚠️ Nenhuma Carteirinha do Convênio enviada.
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- UI Controls -->
+        <div class="mt-3 flex flex-wrap gap-2 items-center justify-between">
+          <!-- Drawing Toolbar -->
+          <div id="draw-toolbar" class="flex bg-slate-800 text-white rounded-lg p-1 border border-slate-700 shadow-sm gap-1 items-center">
+            <button type="button" id="btn-draw" class="w-8 h-8 rounded hover:bg-slate-700 transition-all text-sm flex items-center justify-center cursor-pointer" title="Modo Anotação" onclick="toggleDrawMode()">🖍️</button>
+            <div class="w-px h-5 bg-slate-600 mx-1"></div>
+            <button type="button" class="w-5 h-5 rounded-full bg-red-500 ring-2 ring-transparent ring-offset-1 ring-offset-slate-800 hover:scale-110 cursor-pointer transition-all draw-color" title="Vermelho" onclick="setDrawColor('#ff0000')"></button>
+            <button type="button" class="w-5 h-5 rounded-full bg-green-500 ring-2 ring-transparent ring-offset-1 ring-offset-slate-800 hover:scale-110 cursor-pointer transition-all draw-color" title="Verde" onclick="setDrawColor('#00ff00')"></button>
+            <button type="button" class="w-5 h-5 rounded-full bg-blue-500 ring-2 ring-transparent ring-offset-1 ring-offset-slate-800 hover:scale-110 cursor-pointer transition-all draw-color" title="Azul" onclick="setDrawColor('#0088ff')"></button>
+            <button type="button" class="w-5 h-5 rounded-full bg-yellow-400 ring-2 ring-transparent ring-offset-1 ring-offset-slate-800 hover:scale-110 cursor-pointer transition-all draw-color" title="Amarelo" onclick="setDrawColor('#ffff00')"></button>
+            <button type="button" class="w-5 h-5 rounded-full bg-white ring-2 ring-transparent ring-offset-1 ring-offset-slate-800 hover:scale-110 cursor-pointer transition-all draw-color ring-slate-400" title="Branco" onclick="setDrawColor('#ffffff')"></button>
+            <div class="w-px h-5 bg-slate-600 mx-1"></div>
+            <button type="button" class="px-2 h-8 rounded hover:bg-slate-700 font-semibold transition-all text-xs flex items-center justify-center cursor-pointer" title="Apagar Desenhos" onclick="clearDraw()">Limpar</button>
+          </div>
+
+          <!-- Zoom Toolbar -->
+          <div class="flex bg-slate-800 text-white rounded-lg p-1 border border-slate-700 shadow-sm gap-1">
+            <button type="button" class="w-8 h-8 rounded hover:bg-slate-700 font-bold transition-all text-sm flex items-center justify-center cursor-pointer" title="Aumentar Zoom" onclick="adjustZoom(0.2)">+</button>
+            <button type="button" class="w-8 h-8 rounded hover:bg-slate-700 font-bold transition-all text-sm flex items-center justify-center cursor-pointer" title="Diminuir Zoom" onclick="adjustZoom(-0.2)">-</button>
+            <button type="button" class="px-2 h-8 rounded hover:bg-slate-700 font-semibold transition-all text-xs flex items-center justify-center cursor-pointer" title="Girar Imagem" onclick="rotateViewer()">Girar</button>
+            <button type="button" class="px-2 h-8 rounded hover:bg-slate-700 font-semibold transition-all text-xs flex items-center justify-center cursor-pointer" title="Redefinir" onclick="resetViewer()">Recentralizar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Verification Form -->
+    <div class="lg:col-span-6">
+      <%= form_for(@walk_in, url: admin_walk_in_path(@walk_in), method: :patch, html: { id: "validation-form", class: "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" }) do |f| %>
+        
+        <!-- Header: Cidade do Atendimento + Link Conversa -->
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded border border-slate-200 shadow-sm">
+              <label class="text-xs font-bold text-[#002b47] whitespace-nowrap uppercase tracking-wide">Link Conversa:</label>
+              <% if is_readonly %>
+                <span class="text-xs text-slate-500 truncate max-w-[200px]"><%= @walk_in.link_conversa.presence || "(vazio)" %></span>
+              <% else %>
+                <%= f.text_field :link_conversa, class: "border-none bg-transparent focus:ring-0 text-xs font-medium text-slate-800 p-0 w-48", placeholder: "https://conversa..." %>
+              <% end %>
+            </div>
+          </div>
+          <div>
+            <% if @walk_in.link_conversa.present? %>
+              <%= link_to "Abrir Conversa", @walk_in.link_conversa, target: "_blank", class: "inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors shadow-sm" %>
+            <% else %>
+              <span class="text-xs text-slate-400 font-mono">Sem link</span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-8">
+          
+          <!-- SEÇÃO: DADOS DO PACIENTE -->
+          <%= f.fields_for :patient do |patient_f| %>
+            <div class="space-y-4">
+              <h4 class="<%= section_title_class %>">Dados do Paciente</h4>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <%= patient_f.label :nome, "Nome do Paciente", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :nome, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :cpf, "CPF", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :cpf, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <%= patient_f.label :data_nascimento, "Data de Nascimento", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.date_field :data_nascimento, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :sexo_biologico, "Sexo Biológico", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.select :sexo_biologico, [["Masculino", "M"], ["Feminino", "F"]], { include_blank: "Selecionar" }, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :cidade_atendimento, "Cidade de Atendimento", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.select :cidade_atendimento, Unit.active.pluck(:city).uniq.compact, {}, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs font-semibold" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <%= patient_f.label :telefone, "Telefone", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :telefone, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div class="flex items-center pt-4">
+                  <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-600">
+                    <%= patient_f.check_box :whatsapp, disabled: is_readonly, class: "rounded text-secondary focus:ring-secondary" %>
+                    <span>Este número tem WhatsApp</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO: COBERTURA -->
+            <div class="space-y-4 pt-4 border-t border-slate-100">
+              <h4 class="<%= section_title_class %>">Cobertura & Convênio</h4>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <%= patient_f.label :cobertura_tipo, "Tipo de Cobertura", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.select :cobertura_tipo, [["Particular", "particular"], ["Convênio", "convenio"]], {}, disabled: is_readonly, id: "select-cobertura", class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs font-bold" %>
+                </div>
+              </div>
+
+              <div id="wrapper-convenio-fields" class="grid grid-cols-2 gap-4" style="<%= 'display: none;' if patient.particular? %>">
+                <div>
+                  <%= patient_f.label :convenio, "Nome do Convênio", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :convenio, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :plano, "Plano do Convênio", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :plano, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :numero_carteira, "Número da Carteirinha", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :numero_carteira, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :validade_carteira, "Validade da Carteirinha", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.date_field :validade_carteira, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- SEÇÃO: EXAMES -->
+          <div class="space-y-4 pt-4 border-t border-slate-100">
+            <h4 class="<%= section_title_class %>">Exames Solicitados</h4>
+            
+            <div class="space-y-3" id="exams-container">
+              <%= f.fields_for :requested_exams do |exam_f| %>
+                <div class="flex items-center gap-3 exam-item bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <div class="w-2/12">
+                    <%= exam_f.label :codigo, "Código", class: "block text-[10px] font-bold text-slate-500 uppercase mb-1" %>
+                    <%= exam_f.text_field :codigo, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                  </div>
+                  <div class="flex-grow">
+                    <%= exam_f.label :descricao, "Descrição do Exame", class: "block text-[10px] font-bold text-slate-500 uppercase mb-1" %>
+                    <%= exam_f.text_field :descricao, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                  </div>
+                  <div class="w-2/12">
+                    <%= exam_f.label :acuracia, "Acurácia", class: "block text-[10px] font-bold text-slate-500 uppercase mb-1" %>
+                    <%= exam_f.text_field :acuracia, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs text-center font-mono text-emerald-600 bg-emerald-50", placeholder: "Ex: 95%" %>
+                  </div>
+                  <% unless is_readonly %>
+                    <div class="pt-4 w-16 flex items-center justify-center">
+                      <%= exam_f.hidden_field :_destroy, class: "destroy-field" %>
+                      <button type="button" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors flex flex-col items-center gap-0.5" onclick="if(confirm('Deseja mesmo excluir? É uma ação irreversível')) { this.previousElementSibling.value = '1'; this.closest('.exam-item').style.display = 'none'; }">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <span class="text-[9px] font-bold">Excluir</span>
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <% unless is_readonly %>
+              <button type="button" onclick="addExamField()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 cursor-pointer transition-colors shadow-sm">
+                + Adicionar Exame
+              </button>
+            <% end %>
+          </div>
+
+        </div>
+
+        <!-- Footer / Action Buttons -->
+        <div class="p-6 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-4">
+          <div class="text-xs text-slate-400">
+            <% unless @walk_in.pending? %>
+              Este registro já foi processado e enviado.
+            <% end %>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <%= link_to "Cancelar", admin_root_path, class: "px-4 py-2 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors" %>
+            <% if @walk_in.pending? || @walk_in.webhook_sent? %>
+              <button type="submit" name="commit" value="Salvar" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl transition-all shadow-md cursor-pointer">Salvar</button>
+              <button type="submit" name="commit" value="Validar" data-confirm="Deseja realmente validar e concluir o atendimento?" class="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-secondary/20 cursor-pointer">Validar</button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+  </div>
 </div>
+
+<template id="exam-template">
+  <div class="flex items-center gap-3 exam-item bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm mt-3 animate-fade-in">
+    <div class="w-2/12">
+      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Código</label>
+      <input type="text" name="walk_in[requested_exams_attributes][NEW_INDEX][codigo]" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs">
+    </div>
+    <div class="flex-grow">
+      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Descrição do Exame</label>
+      <input type="text" name="walk_in[requested_exams_attributes][NEW_INDEX][descricao]" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs">
+    </div>
+    <div class="w-2/12">
+      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Acurácia</label>
+      <input type="text" name="walk_in[requested_exams_attributes][NEW_INDEX][acuracia]" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs text-center font-mono text-emerald-600 bg-emerald-50" placeholder="Ex: 95%">
+    </div>
+    <div class="pt-4 w-16 flex items-center justify-center">
+      <button type="button" onclick="if(confirm('Deseja mesmo excluir? É uma ação irreversível')) { this.closest('.exam-item').remove() }" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors flex flex-col items-center gap-0.5">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <span class="text-[9px] font-bold">Excluir</span>
+      </button>
+    </div>
+  </div>
+</template>
+
+<script>
+(function() {
+  // =========================================================
+  // DYNAMIC EXAM FIELD
+  // =========================================================
+  let examIndex = <%= @walk_in.requested_exams.count + 1 %>;
+  
+  window.addExamField = function() {
+    const container = document.getElementById('exams-container');
+    const template = document.getElementById('exam-template').innerHTML;
+    const html = template.replace(/NEW_INDEX/g, examIndex);
+    container.insertAdjacentHTML('beforeend', html);
+    examIndex++;
+  };
+
+  // =========================================================
+  // COVERAGE FIELDS TOGGLE
+  // =========================================================
+  const selectCobertura = document.getElementById('select-cobertura');
+  if (selectCobertura) {
+    selectCobertura.addEventListener('change', function() {
+      const wrapper = document.getElementById('wrapper-convenio-fields');
+      if (this.value === 'convenio') {
+        wrapper.style.display = 'grid';
+      } else {
+        wrapper.style.display = 'none';
+      }
+    });
+  }
+
+  // =========================================================
+  // IMAGE VIEWER (Zoom / Pan / Draw / Rotate)
+  // All state is scoped inside this IIFE to prevent global leakage
+  // =========================================================
+  let currentDoc = '';
+  let zoomScale = 1.0;
+  let zoomX = 0;
+  let zoomY = 0;
+  let rotationAngle = 0;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let drawMode = false;
+  let isDrawing = false;
+  let currentColor = '#ff0000';
+  let ctx = null;
+
+  const zoomBox = document.getElementById('image-zoom-box');
+  const canvas = document.getElementById('drawing-canvas');
+  const drawToolbar = document.getElementById('draw-toolbar');
+  const viewerContainer = document.getElementById('viewer-container');
+
+  // --- Canvas setup ---
+  function resizeCanvas() {
+    if (!canvas) return;
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    if (w === 0 || h === 0) return;
+    canvas.width = w;
+    canvas.height = h;
+    ctx = canvas.getContext('2d');
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  if (canvas) {
+    ctx = canvas.getContext('2d');
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    window.addEventListener('resize', resizeCanvas);
+    requestAnimationFrame(function() { setTimeout(resizeCanvas, 0); });
+  }
+
+  // --- Transform ---
+  function updateTransform() {
+    if (zoomBox) {
+      zoomBox.style.transform = `scale(${zoomScale}) translate(${zoomX}px, ${zoomY}px) rotate(${rotationAngle}deg)`;
+    }
+  }
+
+  // --- Public functions ---
+  window.adjustZoom = function(amount) {
+    zoomScale = Math.min(4, Math.max(0.5, zoomScale + amount));
+    updateTransform();
+  };
+
+  window.rotateViewer = function() {
+    rotationAngle = (rotationAngle + 90) % 360;
+    updateTransform();
+  };
+
+  window.resetViewer = function() {
+    zoomScale = 1.0;
+    zoomX = 0;
+    zoomY = 0;
+    rotationAngle = 0;
+    updateTransform();
+  };
+
+  const PENCIL_CURSOR = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='%23000' stroke-width='0.5' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E\") 0 28, crosshair";
+
+  window.toggleDrawMode = function() {
+    drawMode = !drawMode;
+    const btnDraw = document.getElementById('btn-draw');
+    if (drawMode) {
+      btnDraw.classList.add('bg-secondary', 'ring-2', 'ring-offset-2', 'ring-offset-slate-800');
+      canvas.classList.remove('pointer-events-none');
+      resizeCanvas();
+      canvas.style.cursor = PENCIL_CURSOR;
+      if (viewerContainer) viewerContainer.style.cursor = PENCIL_CURSOR;
+    } else {
+      btnDraw.classList.remove('bg-secondary', 'ring-2', 'ring-offset-2', 'ring-offset-slate-800');
+      canvas.classList.add('pointer-events-none');
+      canvas.style.cursor = 'default';
+      if (viewerContainer) viewerContainer.style.cursor = 'grab';
+    }
+  };
+
+  window.setDrawColor = function(color) {
+    currentColor = color;
+    if (!drawMode) window.toggleDrawMode();
+  };
+
+  window.clearDraw = function() {
+    if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // --- Canvas drawing events ---
+  if (canvas) {
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    canvas.addEventListener('mousedown', function(e) {
+      if (!drawMode) return;
+      isDrawing = true;
+      const pos = getCanvasPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (!drawMode || !isDrawing) return;
+      const pos = getCanvasPos(e);
+      ctx.strokeStyle = currentColor;
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener('mouseup', function() { isDrawing = false; });
+    canvas.addEventListener('mouseleave', function() { isDrawing = false; });
+  }
+
+  // --- Panning events on the container ---
+  if (viewerContainer) {
+    viewerContainer.addEventListener('mousedown', function(e) {
+      if (drawMode) return;
+      isDragging = true;
+      startX = e.clientX - zoomX;
+      startY = e.clientY - zoomY;
+      if (zoomBox) zoomBox.style.transition = 'none';
+      e.preventDefault();
+    });
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging || drawMode) return;
+    zoomX = e.clientX - startX;
+    zoomY = e.clientY - startY;
+    updateTransform();
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      if (zoomBox) zoomBox.style.transition = '';
+    }
+    isDrawing = false;
+  });
+
+  // --- Tab selection ---
+  window.selectImage = function(docType) {
+    document.querySelectorAll('[id^="img-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+      tab.classList.remove('bg-primary', 'text-white', 'border-primary');
+      tab.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+    });
+
+    currentDoc = docType;
+    const activeImg = document.getElementById('img-' + docType);
+    const activeTab = document.getElementById('tab-' + docType);
+
+    if (activeImg) activeImg.classList.remove('hidden');
+    if (activeTab) {
+      activeTab.classList.add('bg-primary', 'text-white', 'border-primary');
+      activeTab.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+    }
+    if (drawToolbar) drawToolbar.classList.remove('hidden');
+    resetViewer();
+  };
+
+  // --- Init ---
+  document.addEventListener('DOMContentLoaded', function() {
+    <% if @walk_in.requisicao_medica.attached? %>
+      selectImage('requisicao_medica');
+    <% elsif @walk_in.documento.attached? %>
+      selectImage('documento');
+    <% else %>
+      selectImage('carteira_convenio');
+    <% end %>
+  });
+})();
+</script>

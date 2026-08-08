@@ -1,0 +1,70 @@
+<% content_for :page_title, "Controle de Permissões de Atendentes" %>
+
+<div class="w-full flex-grow flex flex-col">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Atendentes & Usuários</h2>
+      <p class="text-sm text-slate-500 mt-1">Gerencie quais atendentes pertencem a quais unidades físicas do laboratório.</p>
+    </div>
+  </div>
+
+  <% if notice %>
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold">
+      ✅ <%= notice %>
+    </div>
+  <% end %>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead class="bg-slate-50/50">
+          <tr>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Usuário</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Unidade Vinculada</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Permissão de Visualização</th>
+            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 bg-white">
+          <% @users.each do |user| %>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <!-- E-mail -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
+                <%= user.email %>
+              </td>
+              
+              <!-- Unidade -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                <% if user.unit %>
+                  🏢 <%= user.unit.name %> (<%= user.unit.city %>)
+                <% else %>
+                  🌐 Todas as Unidades
+                <% end %>
+              </td>
+
+              <!-- Permissão badge -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if user.unit %>
+                  <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
+                    Apenas <%= user.unit.name %>
+                  </span>
+                <% else %>
+                  <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold">
+                    Super-Admin / Geral
+                  </span>
+                <% end %>
+              </td>
+
+              <!-- Ações -->
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <%= link_to "Alterar Unidade", edit_admin_user_path(user), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary hover:bg-secondary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
