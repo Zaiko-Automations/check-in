@@ -29,6 +29,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get 'stats', to: 'stats#show'
+      post 'walk_ins/:id/callback', to: 'walk_ins#callback'
     end
   end
 

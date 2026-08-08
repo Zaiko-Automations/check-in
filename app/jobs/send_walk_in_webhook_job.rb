@@ -5,21 +5,27 @@ class SendWalkInWebhookJob < ApplicationJob
 
   retry_on StandardError, wait: :polynomially_longer, attempts: 3
 
-  def perform(walk_in_id)
-    # Read webhook config from DB (set via Admin > Configurações)
-    webhook_url  = AppSetting.webhook_url
-    webhook_auth = AppSetting.webhook_auth
-
-    unless webhook_url.present?
-      Rails.logger.info "[WalkIn Webhook] ⚠️  Webhook URL não configurada — pulando envio."
-      return
-    end
-
+  def perform(walk_in_id, webhook_type = 'final')
     walk_in = WalkIn.find(walk_in_id)
     patient = walk_in.patient
     unit    = walk_in.unit
 
-    payload = build_payload(walk_in, patient, unit)
+    if webhook_type == 'extraction'
+      # Extraction webhook goes to default zaikohub webhook URL
+      webhook_url  = ENV['DEFAULT_WEBHOOK_URL'].presence || 'https://auto.zaikohub.com.br/webhook/check-in-expresso'
+      webhook_auth = ENV['DEFAULT_WEBHOOK_AUTH'].presence
+    else
+      # Final webhook goes to customer's custom setting URL
+      webhook_url  = AppSetting.webhook_url
+      webhook_auth = AppSetting.webhook_auth
+
+      unless webhook_url.present?
+        Rails.logger.info "[WalkIn Webhook] ⚠️  Webhook Final não configurado — pulando envio."
+        return
+      end
+    end
+
+    payload = build_payload(walk_in, patient, unit, webhook_type)
 
     headers = { 'Content-Type' => 'application/json' }
     headers['Authorization'] = webhook_auth if webhook_auth.present?
@@ -31,18 +37,22 @@ class SendWalkInWebhookJob < ApplicationJob
     )
 
     if response.is_a?(Net::HTTPSuccess)
-      walk_in.update!(status: 'webhook_sent', webhook_sent_at: Time.current)
-      Rails.logger.info "[WalkIn Webhook] ✅ Enviado walk_in ##{walk_in.uid} — HTTP #{response.code}"
+      new_status = webhook_type == 'extraction' ? 'webhook_sent' : 'completed'
+      walk_in.update!(status: new_status, webhook_sent_at: Time.current)
+      Rails.logger.info "[WalkIn Webhook] ✅ Enviado (#{webhook_type}) walk_in ##{walk_in.uid} — HTTP #{response.code}"
     else
-      walk_in.update!(status: 'failed', webhook_error: "HTTP #{response.code}: #{response.body.truncate(300)}")
-      Rails.logger.error "[WalkIn Webhook] ❌ Falha walk_in ##{walk_in.uid} — HTTP #{response.code}: #{response.body}"
+      if webhook_type == 'extraction'
+        # Extraction failure updates status to failed so it shows on dashboard
+        walk_in.update!(status: 'failed', webhook_error: "HTTP #{response.code}: #{response.body.truncate(300)}")
+      end
+      Rails.logger.error "[WalkIn Webhook] ❌ Falha (#{webhook_type}) walk_in ##{walk_in.uid} — HTTP #{response.code}: #{response.body}"
       raise "Webhook falhou com HTTP #{response.code}"
     end
   end
 
   private
 
-  def build_payload(walk_in, patient, unit)
+  def build_payload(walk_in, patient, unit, webhook_type)
     lab_name = AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso')
 
     cobertura = if patient.cobertura_tipo == 'convenio'
@@ -58,7 +68,7 @@ class SendWalkInWebhookJob < ApplicationJob
     end
 
     {
-      event:        'walk_in.submitted',
+      event:        webhook_type == 'extraction' ? 'walk_in.submitted' : 'walk_in.validated',
       walk_in_id:   walk_in.uid,
       submitted_at: walk_in.created_at.iso8601,
 
@@ -74,12 +84,13 @@ class SendWalkInWebhookJob < ApplicationJob
       },
 
       patient: {
-        nome:            patient.nome,
-        cpf:             patient.cpf,
-        data_nascimento: patient.data_nascimento&.strftime('%Y-%m-%d'),
-        sexo_biologico:  patient.sexo_biologico,
-        telefone:        patient.telefone,
-        whatsapp:        patient.whatsapp
+        nome:               patient.nome,
+        cpf:                patient.cpf,
+        data_nascimento:    patient.data_nascimento&.strftime('%Y-%m-%d'),
+        sexo_biologico:     patient.sexo_biologico,
+        telefone:           patient.telefone,
+        whatsapp:           patient.whatsapp,
+        cidade_atendimento: patient.cidade_atendimento
       },
 
       cobertura: cobertura,
@@ -87,9 +98,9 @@ class SendWalkInWebhookJob < ApplicationJob
       exams: walk_in.requested_exams.map { |e| { codigo: e.codigo, descricao: e.descricao, acuracia: e.acuracia } },
 
       documents: {
-        carteira_convenio: walk_in.carteira_convenio_url,
-        requisicao_medica: walk_in.requisicao_medica_url,
-        documento:         walk_in.documento_url
+        carteira_convenio:   walk_in.carteira_convenio_url,
+        requisicoes_medicas: walk_in.requisicoes_medicas_urls,
+        documento:           walk_in.documento_url
       }
     }
   end

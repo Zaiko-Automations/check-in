@@ -192,18 +192,18 @@
       </div>
 
       <div class="upload-area" id="upload-requisicao">
-        <input type="file" id="requisicao_medica" name="requisicao_medica"
-               accept="image/*" capture="environment" class="upload-input"
-               onchange="previewImage(this, 'preview-requisicao')">
+        <input type="file" id="requisicao_medica" name="requisicoes_medicas[]"
+               accept="image/*" class="upload-input" multiple
+               onchange="previewImagesMultiple(this, 'preview-requisicao')">
         <label for="requisicao_medica" class="upload-label">
           <div class="upload-icon">📄</div>
           <p class="upload-title">Foto do Pedido Médico</p>
           <p class="upload-hint">Toque para abrir a câmera ou escolher arquivo</p>
-          <span class="upload-optional">Opcional — pule se não tiver em mãos</span>
+          <span class="upload-optional">Opcional — suporta múltiplas páginas</span>
         </label>
         <div class="upload-preview" id="preview-requisicao" style="display: none;">
-          <img id="preview-requisicao-img" src="" alt="Preview pedido médico">
-          <button type="button" class="preview-remove" onclick="removeImage('requisicao_medica', 'preview-requisicao')">✕ Remover</button>
+          <div id="preview-requisicao-container" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 12px;"></div>
+          <button type="button" class="preview-remove" onclick="removeImagesMultiple('requisicao_medica', 'preview-requisicao')">✕ Remover Todos</button>
         </div>
       </div>
 
@@ -423,6 +423,43 @@ function removeImage(inputId, previewId) {
   label.style.display = 'flex';
 }
 
+function previewImagesMultiple(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const container = document.getElementById(`${previewId}-container`);
+  const label = input.closest('.upload-area').querySelector('.upload-label');
+
+  container.innerHTML = ''; // clear old
+
+  if (input.files && input.files.length > 0) {
+    Array.from(input.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxHeight = '100px';
+        img.style.borderRadius = '6px';
+        img.style.border = '1px solid #cbd5e1';
+        container.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+    preview.style.display = 'block';
+    label.style.display = 'none';
+  }
+}
+
+function removeImagesMultiple(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const container = document.getElementById(`${previewId}-container`);
+  const label = input.closest('.upload-area').querySelector('.upload-label');
+
+  input.value = '';
+  container.innerHTML = '';
+  preview.style.display = 'none';
+  label.style.display = 'flex';
+}
+
 // ────────────────────────────────────────────────────────────────
 // Review / Summary
 function buildReview() {
@@ -458,7 +495,7 @@ function buildReview() {
   set('review-carteira-status', carteiraInput.files.length > 0 ? '📷 Foto anexada ✅' : '(não enviada)');
 
   const pedidoInput = document.getElementById('requisicao_medica');
-  set('review-pedido-status', pedidoInput.files.length > 0 ? '📄 Foto anexada ✅' : '(não enviada)');
+  set('review-pedido-status', pedidoInput.files.length > 0 ? `📄 ${pedidoInput.files.length} página(s) anexada(s) ✅` : '(não enviada)');
 }
 
 // ────────────────────────────────────────────────────────────────

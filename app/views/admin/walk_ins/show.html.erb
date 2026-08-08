@@ -54,16 +54,22 @@
         
         <!-- Image Selector Tabs -->
         <div class="flex border-b border-slate-100 pb-3 gap-2" id="doc-tabs">
-          <!-- Requisicao Medica -->
-          <button type="button" onclick="selectImage('requisicao_medica')" id="tab-requisicao_medica"
-                  class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer">
-            Pedido Médico
-            <% if @walk_in.requisicao_medica.attached? %>
-              <span class="block text-[9px] text-emerald-500 font-normal">Anexo ok</span>
-            <% else %>
-              <span class="block text-[9px] text-slate-400 font-normal">Não enviado</span>
+          <!-- Requisicoes Medicas (multiple) -->
+          <% if @walk_in.requisicoes_medicas.attached? %>
+            <% @walk_in.requisicoes_medicas.each_with_index do |pm, idx| %>
+              <button type="button" onclick="selectImage('requisicao_medica_<%= idx %>')" id="tab-requisicao_medica_<%= idx %>"
+                      class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer">
+                Pedido Médico<%= @walk_in.requisicoes_medicas.count > 1 ? " #{idx + 1}" : "" %>
+                <span class="block text-[9px] text-emerald-500 font-normal">Anexo ok</span>
+              </button>
             <% end %>
-          </button>
+          <% else %>
+            <button type="button" id="tab-requisicao_medica"
+                    class="flex-1 text-center py-2 px-3 text-xs font-semibold rounded-lg border transition-all cursor-pointer bg-white text-slate-600 border-slate-200">
+              Pedido Médico
+              <span class="block text-[9px] text-slate-400 font-normal">Não enviado</span>
+            </button>
+          <% end %>
           
           <!-- Documento (RG/CNH) -->
           <button type="button" onclick="selectImage('documento')" id="tab-documento"
@@ -95,8 +101,10 @@
             <!-- Drawing Canvas Overlay -->
             <canvas id="drawing-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10"></canvas>
 
-            <% if @walk_in.requisicao_medica.attached? %>
-              <img id="img-requisicao_medica" src="<%= url_for(@walk_in.requisicao_medica) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none relative z-0">
+            <% if @walk_in.requisicoes_medicas.attached? %>
+              <% @walk_in.requisicoes_medicas.each_with_index do |pm, idx| %>
+                <img id="img-requisicao_medica_<%= idx %>" src="<%= url_for(pm) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none relative z-0 <%= idx == 0 ? '' : 'hidden' %>">
+              <% end %>
             <% else %>
               <div id="img-requisicao_medica" class="text-slate-400 text-sm p-6 text-center">
                 ⚠️ Nenhum Pedido Médico enviado.
@@ -215,6 +223,48 @@
                     <%= patient_f.check_box :whatsapp, disabled: is_readonly, class: "rounded text-secondary focus:ring-secondary" %>
                     <span>Este número tem WhatsApp</span>
                   </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO: ENDEREÇO DO PACIENTE -->
+            <div class="space-y-4 pt-4 border-t border-slate-100">
+              <h4 class="<%= section_title_class %>">Endereço do Paciente</h4>
+              
+              <div class="grid grid-cols-4 gap-4">
+                <div class="col-span-3">
+                  <%= patient_f.label :logradouro, "Logradouro", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :logradouro, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :numero, "Número", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :numero, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <%= patient_f.label :bairro, "Bairro", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :bairro, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :cidade, "Cidade", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :cidade, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :uf, "UF", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :uf, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <%= patient_f.label :cep, "CEP", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :cep, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
+                </div>
+                <div>
+                  <%= patient_f.label :complemento, "Complemento", class: "block text-[10px] font-bold text-slate-400 uppercase mb-1" %>
+                  <%= patient_f.text_field :complemento, disabled: is_readonly, class: "w-full px-2.5 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-secondary text-xs" %>
                 </div>
               </div>
             </div>
@@ -550,8 +600,8 @@
 
   // --- Init ---
   document.addEventListener('DOMContentLoaded', function() {
-    <% if @walk_in.requisicao_medica.attached? %>
-      selectImage('requisicao_medica');
+    <% if @walk_in.requisicoes_medicas.attached? %>
+      selectImage('requisicao_medica_0');
     <% elsif @walk_in.documento.attached? %>
       selectImage('documento');
     <% else %>

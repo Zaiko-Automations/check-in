@@ -25,8 +25,8 @@ class CheckinController < ApplicationController
         @walk_in.carteira_convenio.attach(params[:carteira_convenio])
       end
 
-      if params[:requisicao_medica].present?
-        @walk_in.requisicao_medica.attach(params[:requisicao_medica])
+      if params[:requisicoes_medicas].present?
+        @walk_in.requisicoes_medicas.attach(params[:requisicoes_medicas])
       end
 
       if params[:documento].present?
@@ -34,7 +34,7 @@ class CheckinController < ApplicationController
       end
     end
 
-    SendWalkInWebhookJob.perform_later(@walk_in.id)
+    SendWalkInWebhookJob.perform_later(@walk_in.id, 'extraction')
 
     redirect_to checkin_success_path(token: @unit.token), notice: "Check-in confirmado!"
 

@@ -7,7 +7,7 @@ class WalkIn < ApplicationRecord
 
   # Images stored in Cloudflare R2
   has_one_attached :carteira_convenio
-  has_one_attached :requisicao_medica
+  has_many_attached :requisicoes_medicas
   has_one_attached :documento
 
   before_create :generate_uid
@@ -31,9 +31,11 @@ class WalkIn < ApplicationRecord
     Rails.application.routes.url_helpers.rails_blob_url(carteira_convenio, host: app_host)
   end
 
-  def requisicao_medica_url
-    return nil unless requisicao_medica.attached?
-    Rails.application.routes.url_helpers.rails_blob_url(requisicao_medica, host: app_host)
+  def requisicoes_medicas_urls
+    return [] unless requisicoes_medicas.attached?
+    requisicoes_medicas.map do |pm|
+      Rails.application.routes.url_helpers.rails_blob_url(pm, host: app_host)
+    end
   end
 
   def documento_url

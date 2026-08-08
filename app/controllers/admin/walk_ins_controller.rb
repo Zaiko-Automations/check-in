@@ -58,7 +58,8 @@ module Admin
         patient_attributes: [
           :id, :nome, :cpf, :data_nascimento, :sexo_biologico,
           :telefone, :whatsapp, :cidade_atendimento,
-          :cobertura_tipo, :convenio, :plano, :numero_carteira, :validade_carteira
+          :cobertura_tipo, :convenio, :plano, :numero_carteira, :validade_carteira,
+          :logradouro, :numero, :bairro, :cidade, :uf, :cep, :complemento
         ],
         requested_exams_attributes: [
           :id, :codigo, :descricao, :acuracia, :_destroy
