@@ -9,8 +9,11 @@ module Admin
         scope = scope.where(unit_id: current_user.unit_id)
       end
 
+      # For 'pending' tab, show both 'pending' and 'failed' webhooks
+      query_status = @status == 'pending' ? ['pending', 'failed'] : @status
+
       @walk_ins = scope.includes(:patient, :unit)
-                       .where(status: @status)
+                       .where(status: query_status)
                        .order(created_at: :desc)
 
       # Search filter
@@ -24,7 +27,7 @@ module Admin
 
       # Counts scoped by the same unit permissions
       @counts = {
-        pending:      scope.pending.count,
+        pending:      scope.where(status: ['pending', 'failed']).count,
         webhook_sent: scope.webhook_sent.count,
         completed:    scope.completed.count,
         today:        scope.today.count
