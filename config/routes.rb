@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   # Devise auth for admin users
-  devise_for :users, path: 'admin/auth'
+  devise_for :users, path: 'admin/auth',
+             controllers: {
+               sessions:  'users/sessions',
+               passwords: 'users/passwords'
+             }
 
   # ─── Checkin público (formulário do paciente) ───────────────────────────────
   get  '/checkin/:token',         to: 'checkin#show',    as: :checkin
