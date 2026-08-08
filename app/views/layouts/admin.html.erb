@@ -74,7 +74,7 @@
 <body>
 
   <aside class="sidebar">
-    <h2>Lab Walk-In</h2>
+    <h2><%= AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso') %></h2>
     <nav>
       <a href="<%= admin_root_path %>" class="nav-link <%= 'active' if controller_name == 'dashboard' %>">📋 Fila de Espera</a>
       <a href="<%= admin_units_path %>" class="nav-link <%= 'active' if controller_name == 'units' %>">🏢 Unidades & QR Codes</a>
@@ -86,9 +86,6 @@
     <header class="topbar">
       <h1><%= yield(:page_title) %></h1>
       <div class="user-info">
-        <% if current_tenant %>
-          <strong>Tenant:</strong> <%= current_tenant.name %> | 
-        <% end %>
         <%= current_user&.email %>
       </div>
     </header>
