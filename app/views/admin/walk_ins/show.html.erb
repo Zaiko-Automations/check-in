@@ -103,7 +103,10 @@
 
             <% if @walk_in.requisicoes_medicas.attached? %>
               <% @walk_in.requisicoes_medicas.each_with_index do |pm, idx| %>
-                <img id="img-requisicao_medica_<%= idx %>" src="<%= url_for(pm) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none relative z-0 <%= idx == 0 ? '' : 'hidden' %>">
+                <img id="img-requisicao_medica_<%= idx %>"
+                     src="<%= rails_blob_path(pm, disposition: 'inline') %>"
+                     class="max-h-[580px] max-w-full object-contain pointer-events-none select-none relative z-0 <%= idx == 0 ? '' : 'hidden' %>"
+                     onerror="this.style.display='none'; this.nextElementSibling?.style.removeProperty('display')">
               <% end %>
             <% else %>
               <div id="img-requisicao_medica" class="text-slate-400 text-sm p-6 text-center">
@@ -112,7 +115,10 @@
             <% end %>
 
             <% if @walk_in.documento.attached? %>
-              <img id="img-documento" src="<%= url_for(@walk_in.documento) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0">
+              <img id="img-documento"
+                   src="<%= rails_blob_path(@walk_in.documento, disposition: 'inline') %>"
+                   class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0"
+                   onerror="this.style.display='none'">
             <% else %>
               <div id="img-documento" class="text-slate-400 text-sm hidden p-6 text-center">
                 ⚠️ Nenhum Documento de Identidade enviado.
@@ -120,7 +126,10 @@
             <% end %>
 
             <% if @walk_in.carteira_convenio.attached? %>
-              <img id="img-carteira_convenio" src="<%= url_for(@walk_in.carteira_convenio) %>" class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0">
+              <img id="img-carteira_convenio"
+                   src="<%= rails_blob_path(@walk_in.carteira_convenio, disposition: 'inline') %>"
+                   class="max-h-[580px] max-w-full object-contain pointer-events-none select-none hidden relative z-0"
+                   onerror="this.style.display='none'">
             <% else %>
               <div id="img-carteira_convenio" class="text-slate-400 text-sm hidden p-6 text-center">
                 ⚠️ Nenhuma Carteirinha do Convênio enviada.

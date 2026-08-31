@@ -155,12 +155,12 @@
         <!-- Upload carteira convênio -->
         <div class="upload-area" id="upload-carteira">
           <input type="file" id="carteira_convenio" name="carteira_convenio"
-                 accept="image/*" capture="environment" class="upload-input"
+                 accept="image/*,application/pdf" class="upload-input"
                  onchange="previewImage(this, 'preview-carteira')">
           <label for="carteira_convenio" class="upload-label">
             <div class="upload-icon">📷</div>
             <p class="upload-title">Foto da Carteirinha</p>
-            <p class="upload-hint">Toque para abrir a câmera ou escolher arquivo</p>
+            <p class="upload-hint">Toque para tirar foto, escolher da galeria ou anexar arquivo</p>
           </label>
           <div class="upload-preview" id="preview-carteira" style="display: none;">
             <img id="preview-carteira-img" src="" alt="Preview carteirinha">
@@ -192,29 +192,57 @@
       </div>
 
       <div class="upload-area" id="upload-requisicao">
-        <input type="file" id="requisicao_medica" name="requisicoes_medicas[]"
-               accept="image/*" class="upload-input" multiple
-               onchange="previewImagesMultiple(this, 'preview-requisicao')">
-        <label for="requisicao_medica" class="upload-label">
-          <div class="upload-icon">📄</div>
-          <p class="upload-title">Foto do Pedido Médico</p>
-          <p class="upload-hint">Toque para abrir a câmera ou escolher arquivo</p>
-          <span class="upload-optional">Opcional — suporta múltiplas páginas</span>
+        <%# Input 1: Câmera (tira uma foto por vez, acumula) %>
+        <input type="file" id="requisicao_camera" name="requisicoes_medicas[]"
+               accept="image/*" capture="environment" class="upload-input" style="display:none"
+               onchange="accumulateImage(this, 'preview-requisicao')">
+        <%# Input 2: Galeria / Arquivo (múltiplos de uma vez) %>
+        <input type="file" id="requisicao_arquivo" name="requisicoes_medicas[]"
+               accept="image/*,application/pdf" multiple class="upload-input" style="display:none"
+               onchange="accumulateImages(this, 'preview-requisicao')">
+
+        <label class="upload-label" id="label-requisicao">
+          <div class="upload-icon">📋</div>
+          <p class="upload-title">Pedido Médico</p>
+          <p class="upload-hint">Escolha como deseja enviar:</p>
+          <div style="display: flex; gap: 8px; margin-top: 12px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
+                    style="padding: 8px 16px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 13px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📷 Tirar Foto
+            </button>
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
+                    style="padding: 8px 16px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 13px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📂 Escolher Arquivo / Galeria
+            </button>
+          </div>
+          <span class="upload-optional" style="margin-top: 10px;">Opcional — pode adicionar várias páginas</span>
         </label>
+
         <div class="upload-preview" id="preview-requisicao" style="display: none;">
+          <p style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;" id="preview-requisicao-count"></p>
           <div id="preview-requisicao-container" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 12px;"></div>
-          <button type="button" class="preview-remove" onclick="removeImagesMultiple('requisicao_medica', 'preview-requisicao')">✕ Remover Todos</button>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
+                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📷 + Mais Foto
+            </button>
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
+                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📂 + Mais Arquivo
+            </button>
+            <button type="button" class="preview-remove" onclick="removeAllRequisicoes()">✕ Remover Todos</button>
+          </div>
         </div>
       </div>
 
       <div class="upload-area" id="upload-documento" style="margin-top: 24px;">
         <input type="file" id="documento" name="documento"
-               accept="image/*" capture="environment" class="upload-input"
+               accept="image/*,application/pdf" class="upload-input"
                onchange="previewImage(this, 'preview-documento')">
         <label for="documento" class="upload-label">
           <div class="upload-icon">🪪</div>
           <p class="upload-title">Foto do Documento (RG/CNH)</p>
-          <p class="upload-hint">Toque para abrir a câmera ou escolher arquivo</p>
+          <p class="upload-hint">Toque para tirar foto, escolher da galeria ou anexar arquivo</p>
           <span class="upload-optional">Opcional — pule se não tiver em mãos</span>
         </label>
         <div class="upload-preview" id="preview-documento" style="display: none;">
@@ -423,42 +451,111 @@ function removeImage(inputId, previewId) {
   label.style.display = 'flex';
 }
 
-function previewImagesMultiple(input, previewId) {
-  const preview = document.getElementById(previewId);
-  const container = document.getElementById(`${previewId}-container`);
-  const label = input.closest('.upload-area').querySelector('.upload-label');
+// ────────────────────────────────────────────────────────────────
+// Accumulating file uploads for Pedido Médico (multi-input approach)
+// We maintain a DataTransfer object per input to accumulate files.
+const _requisicaoDT = new DataTransfer();
 
-  container.innerHTML = ''; // clear old
+function _renderRequisicoesPreview() {
+  const preview   = document.getElementById('preview-requisicao');
+  const container = document.getElementById('preview-requisicao-container');
+  const label     = document.getElementById('label-requisicao');
+  const countEl   = document.getElementById('preview-requisicao-count');
+  const total     = _requisicaoDT.files.length;
 
-  if (input.files && input.files.length > 0) {
-    Array.from(input.files).forEach(file => {
+  if (total === 0) {
+    preview.style.display = 'none';
+    label.style.display   = 'flex';
+    return;
+  }
+
+  preview.style.display = 'block';
+  label.style.display   = 'none';
+  countEl.textContent   = `${total} página(s) adicionada(s)`;
+
+  container.innerHTML = '';
+  Array.from(_requisicaoDT.files).forEach((file, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;display:inline-block;';
+
+    if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = e => {
         const img = document.createElement('img');
         img.src = e.target.result;
-        img.style.maxHeight = '100px';
-        img.style.borderRadius = '6px';
-        img.style.border = '1px solid #cbd5e1';
-        container.appendChild(img);
+        img.style.cssText = 'max-height:100px;border-radius:6px;border:1px solid #cbd5e1;display:block;';
+        img.title = file.name;
+        wrapper.appendChild(img);
       };
       reader.readAsDataURL(file);
-    });
-    preview.style.display = 'block';
-    label.style.display = 'none';
-  }
+    } else {
+      const icon = document.createElement('div');
+      icon.style.cssText = 'width:80px;height:100px;border:1px solid #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#f8fafc;';
+      icon.textContent = '📄';
+      icon.title = file.name;
+      wrapper.appendChild(icon);
+    }
+
+    const badge = document.createElement('span');
+    badge.style.cssText = 'position:absolute;top:2px;right:2px;background:#002b47;color:white;border-radius:999px;font-size:9px;font-weight:700;padding:1px 5px;';
+    badge.textContent = i + 1;
+    wrapper.appendChild(badge);
+
+    container.appendChild(wrapper);
+  });
+
+  // Sync the accumulated files back to both hidden inputs so they submit
+  const camInput = document.getElementById('requisicao_camera');
+  const arqInput = document.getElementById('requisicao_arquivo');
+  // We can only set files via DataTransfer; assign to one canonical input
+  // But since both have name=requisicoes_medicas[], just keep _requisicaoDT in sync
+  // The actual form submission uses a hidden clone — see FormData override below
 }
 
-function removeImagesMultiple(inputId, previewId) {
-  const input = document.getElementById(inputId);
-  const preview = document.getElementById(previewId);
-  const container = document.getElementById(`${previewId}-container`);
-  const label = input.closest('.upload-area').querySelector('.upload-label');
+// Called when camera captures one photo
+function accumulateImage(input, previewId) {
+  if (!input.files || input.files.length === 0) return;
+  _requisicaoDT.items.add(input.files[0]);
+  input.value = ''; // reset so same file can be added again
+  _renderRequisicoesPreview();
+}
 
+// Called when gallery/file selector returns one or more files
+function accumulateImages(input, previewId) {
+  if (!input.files || input.files.length === 0) return;
+  Array.from(input.files).forEach(f => _requisicaoDT.items.add(f));
   input.value = '';
-  container.innerHTML = '';
-  preview.style.display = 'none';
-  label.style.display = 'flex';
+  _renderRequisicoesPreview();
 }
+
+function removeAllRequisicoes() {
+  // Clear DataTransfer
+  while (_requisicaoDT.items.length > 0) _requisicaoDT.items.remove(0);
+  _renderRequisicoesPreview();
+  document.getElementById('preview-requisicao-container').innerHTML = '';
+}
+
+// Before form submit, inject the accumulated files into a fresh set of inputs
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('checkin-form') || document.querySelector('form[action*="checkin"]') || document.querySelector('form');
+  if (!form) return;
+  form.addEventListener('submit', function(e) {
+    // Remove old hidden requisicao inputs
+    form.querySelectorAll('input[data-req-clone]').forEach(el => el.remove());
+
+    // For each accumulated file, create a hidden file-like input via DataTransfer
+    if (_requisicaoDT.files.length > 0) {
+      // We need to attach actual File objects. The cleanest cross-browser way
+      // is to reuse one of the existing file inputs and set its files via DataTransfer.
+      const camInput = document.getElementById('requisicao_camera');
+      const arqInput = document.getElementById('requisicao_arquivo');
+      // Assign all accumulated to camera input (it has correct name)
+      camInput.files = _requisicaoDT.files;
+      // Clear arquivo so it doesn't submit empty
+      arqInput.disabled = true;
+    }
+  }, { capture: true });
+});
 
 // ────────────────────────────────────────────────────────────────
 // Review / Summary
@@ -494,8 +591,9 @@ function buildReview() {
   const carteiraInput = document.getElementById('carteira_convenio');
   set('review-carteira-status', carteiraInput.files.length > 0 ? '📷 Foto anexada ✅' : '(não enviada)');
 
-  const pedidoInput = document.getElementById('requisicao_medica');
-  set('review-pedido-status', pedidoInput.files.length > 0 ? `📄 ${pedidoInput.files.length} página(s) anexada(s) ✅` : '(não enviada)');
+  // Use accumulated DataTransfer count for pedido médico
+  const pedidoCount = _requisicaoDT.files.length;
+  set('review-pedido-status', pedidoCount > 0 ? `📄 ${pedidoCount} página(s) anexada(s) ✅` : '(não enviada)');
 }
 
 // ────────────────────────────────────────────────────────────────
