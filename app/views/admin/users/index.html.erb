@@ -35,8 +35,8 @@
         <thead class="bg-slate-50/50">
           <tr>
             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Usuário</th>
+            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Função</th>
             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Unidade Vinculada</th>
-            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Permissão de Visualização</th>
             <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Ações</th>
           </tr>
         </thead>
@@ -58,25 +58,25 @@
                 </div>
               </td>
               
+              <!-- Função / Role -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if user.admin? %>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold">
+                    🔑 Administrador
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full text-xs font-bold">
+                    👤 Atendente
+                  </span>
+                <% end %>
+              </td>
+
               <!-- Unidade -->
               <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
                 <% if user.unit %>
                   🏢 <%= user.unit.name %> <%= "(#{user.unit.city})" if user.unit.city.present? %>
                 <% else %>
                   🌐 Todas as Unidades
-                <% end %>
-              </td>
-
-              <!-- Permissão badge -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <% if user.unit %>
-                  <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
-                    Apenas <%= user.unit.name %>
-                  </span>
-                <% else %>
-                  <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold">
-                    Acesso Geral / Todas as Unidades
-                  </span>
                 <% end %>
               </td>
 

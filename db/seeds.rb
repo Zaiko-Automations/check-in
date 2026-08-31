@@ -4,18 +4,27 @@
 puts "═══ Check-in Expresso — Seeds ═══"
 
 # ─── Usuário admin padrão ────────────────────────────────────────────────────
+# Para personalizar: ADMIN_EMAIL=seu@email.com ADMIN_PASSWORD=SenhaForte123 rails db:seed
 admin_email    = ENV.fetch('ADMIN_EMAIL', 'admin@checkin.local')
 admin_password = ENV.fetch('ADMIN_PASSWORD', 'Checkin@2026!')
 
-if User.find_by(email: admin_email).nil?
+admin = User.find_by(email: admin_email)
+if admin.nil?
   User.create!(
     email:                 admin_email,
     password:              admin_password,
-    password_confirmation: admin_password
+    password_confirmation: admin_password,
+    role:                  'admin'
   )
-  puts "✅ Usuário admin criado: #{admin_email}"
+  puts "✅ Usuário admin criado: #{admin_email} (role: admin)"
 else
-  puts "ℹ️  Usuário admin já existe: #{admin_email}"
+  # Ensure existing admin has the admin role (migration safety)
+  if admin.role != 'admin'
+    admin.update_columns(role: 'admin')
+    puts "✅ Role 'admin' atribuída ao usuário existente: #{admin_email}"
+  else
+    puts "ℹ️  Usuário admin já existe: #{admin_email} (role: #{admin.role})"
+  end
 end
 
 # ─── Unidade padrão (se nenhuma existir) ─────────────────────────────────────

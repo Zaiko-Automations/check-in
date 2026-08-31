@@ -1,5 +1,6 @@
 module Admin
   class SettingsController < BaseController
+    before_action :require_admin!
     def edit
       @webhook_url  = AppSetting.get(:webhook_url).to_s
       @webhook_auth = AppSetting.get(:webhook_auth).to_s

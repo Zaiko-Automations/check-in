@@ -1,5 +1,6 @@
 module Admin
   class UnitsController < BaseController
+    before_action :require_admin!
     before_action :set_unit, only: [:show, :edit, :update, :destroy]
 
     def index
