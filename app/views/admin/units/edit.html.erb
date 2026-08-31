@@ -1,4 +1,4 @@
-<% content_for :page_title, "Nova Unidade" %>
+<% content_for :page_title, "Editar Unidade" %>
 
 <div class="w-full flex-grow flex flex-col">
   <!-- Page Header -->
@@ -6,12 +6,12 @@
     <%= link_to admin_units_path, class: "px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl border border-slate-300 transition-colors shadow-sm cursor-pointer" do %>
       ← Voltar
     <% end %>
-    <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Nova Unidade</h2>
+    <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Editar Unidade</h2>
   </div>
 
   <div class="max-w-xl bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
     <p class="text-sm text-slate-600 mb-6">
-      Cadastre uma nova filial ou posto de coleta do laboratório para gerar sua URL e QR Code exclusivos.
+      Edite as informações da unidade física <strong><%= @unit.name %></strong>.
     </p>
 
     <%= form_with model: [:admin, @unit], local: true do |f| %>
@@ -23,7 +23,7 @@
 
       <div class="mb-4">
         <%= f.label :name, "Nome da Unidade", class: "block text-sm font-bold text-slate-700 mb-1" %>
-        <%= f.text_field :name, placeholder: "Ex: Recepção Central / Filial Centro", required: true, class: "w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary text-sm" %>
+        <%= f.text_field :name, placeholder: "Ex: Recepção Central", required: true, class: "w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary text-sm" %>
       </div>
 
       <div class="mb-4">
@@ -31,14 +31,21 @@
         <%= f.text_field :address, placeholder: "Ex: Av. Paulista, 1000", class: "w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary text-sm" %>
       </div>
 
-      <div class="mb-6">
+      <div class="mb-4">
         <%= f.label :city, "Cidade", class: "block text-sm font-bold text-slate-700 mb-1" %>
         <%= f.text_field :city, placeholder: "Ex: São Paulo", class: "w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary text-sm" %>
       </div>
 
+      <div class="mb-6 pt-2">
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          <%= f.check_box :active, class: "rounded text-secondary focus:ring-secondary w-4 h-4" %>
+          <span class="text-sm font-semibold text-slate-700">Unidade Ativa (aceitando check-ins)</span>
+        </label>
+      </div>
+
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
         <%= link_to "Cancelar", admin_units_path, class: "px-4 py-2 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors" %>
-        <%= f.submit "Criar Unidade", class: "px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-secondary/20 cursor-pointer" %>
+        <%= f.submit "Salvar Alterações", class: "px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-secondary/20 cursor-pointer" %>
       </div>
     <% end %>
   </div>

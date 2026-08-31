@@ -1,17 +1,30 @@
-<% content_for :page_title, "Controle de Permissões de Atendentes" %>
+<% content_for :page_title, "Usuários" %>
 
 <div class="w-full flex-grow flex flex-col">
   <!-- Page Header -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
     <div>
-      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Atendentes & Usuários</h2>
-      <p class="text-sm text-slate-500 mt-1">Gerencie quais atendentes pertencem a quais unidades físicas do laboratório.</p>
+      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Usuários</h2>
+      <p class="text-sm text-slate-500 mt-1">Gerencie os usuários do sistema e suas respectivas permissões de unidade.</p>
+    </div>
+
+    <div>
+      <%= link_to new_admin_user_path, class: "inline-flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-xl transition-all shadow-sm cursor-pointer" do %>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        <span>Novo Usuário</span>
+      <% end %>
     </div>
   </div>
 
   <% if notice %>
-    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold">
-      ✅ <%= notice %>
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center justify-between">
+      <span>✅ <%= notice %></span>
+    </div>
+  <% end %>
+
+  <% if alert %>
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-semibold flex items-center justify-between">
+      <span>⚠️ <%= alert %></span>
     </div>
   <% end %>
 
@@ -31,14 +44,24 @@
           <% @users.each do |user| %>
             <tr class="hover:bg-slate-50/50 transition-colors">
               <!-- E-mail -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
-                <%= user.email %>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0 uppercase border border-slate-200">
+                    <%= user.email.first(2).upcase %>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-bold text-slate-800"><%= user.email %></span>
+                    <% if user == current_user %>
+                      <span class="text-[10px] text-emerald-600 font-semibold">(Você)</span>
+                    <% end %>
+                  </div>
+                </div>
               </td>
               
               <!-- Unidade -->
               <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
                 <% if user.unit %>
-                  🏢 <%= user.unit.name %> (<%= user.unit.city %>)
+                  🏢 <%= user.unit.name %> <%= "(#{user.unit.city})" if user.unit.city.present? %>
                 <% else %>
                   🌐 Todas as Unidades
                 <% end %>
@@ -52,14 +75,25 @@
                   </span>
                 <% else %>
                   <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold">
-                    Super-Admin / Geral
+                    Acesso Geral / Todas as Unidades
                   </span>
                 <% end %>
               </td>
 
               <!-- Ações -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <%= link_to "Alterar Unidade", edit_admin_user_path(user), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary hover:bg-secondary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm" %>
+                <div class="flex items-center justify-end gap-2">
+                  <%= link_to edit_admin_user_path(user), class: "inline-flex items-center justify-center px-3 py-1.5 bg-secondary hover:bg-secondary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm gap-1" do %>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    <span>Editar</span>
+                  <% end %>
+
+                  <% if user != current_user %>
+                    <%= button_to admin_user_path(user), method: :delete, data: { confirm: "Deseja realmente excluir o usuário #{user.email}?" }, class: "p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer", title: "Excluir Usuário" do %>
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
