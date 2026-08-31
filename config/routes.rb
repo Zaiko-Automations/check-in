@@ -28,8 +28,10 @@ Rails.application.routes.draw do
   # ─── API pública (dashboard central consulta cada instância) ─────────────────
   namespace :api do
     namespace :v1 do
-      get 'stats', to: 'stats#show'
+      get  'stats', to: 'stats#show'
       post 'walk_ins/:id/callback', to: 'walk_ins#callback'
+      post 'walk_ins/callback',     to: 'walk_ins#callback'
+      post 'callback',              to: 'walk_ins#callback'
     end
   end
 
