@@ -94,7 +94,14 @@ class SendWalkInWebhookJob < ApplicationJob
         sexo_biologico:     patient.sexo_biologico,
         telefone:           patient.telefone,
         whatsapp:           patient.whatsapp,
-        cidade_atendimento: patient.cidade_atendimento
+        cidade_atendimento: patient.cidade_atendimento,
+        logradouro:         patient.logradouro,
+        numero:             patient.numero,
+        bairro:             patient.bairro,
+        cidade:             patient.cidade,
+        uf:                 patient.uf,
+        cep:                patient.cep,
+        complemento:        patient.complemento
       },
 
       cobertura: cobertura,

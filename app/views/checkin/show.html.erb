@@ -24,7 +24,7 @@
   <!-- Progress Bar -->
   <div class="progress-bar-container">
     <div class="progress-track">
-      <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+      <div class="progress-fill" id="progress-fill" style="width: 14%"></div>
     </div>
     <div class="progress-steps">
       <span class="step-dot active" data-step="1">1</span>
@@ -32,6 +32,8 @@
       <span class="step-dot" data-step="3">3</span>
       <span class="step-dot" data-step="4">4</span>
       <span class="step-dot" data-step="5">5</span>
+      <span class="step-dot" data-step="6">6</span>
+      <span class="step-dot" data-step="7">7</span>
     </div>
     <p class="progress-label" id="progress-label">Tipo de Atendimento</p>
   </div>
@@ -231,7 +233,7 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         STEP 4 — Pedido Médico & Documento
+         STEP 4 — Pedido Médico
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step" id="step-4">
       <div class="step-header">
@@ -282,23 +284,6 @@
         </div>
       </div>
 
-      <!-- Documento (RG / CNH) -->
-      <div class="upload-area" id="upload-documento" style="margin-top: 24px;">
-        <input type="file" id="documento" name="documento"
-               accept="image/*,application/pdf" class="upload-input"
-               onchange="previewImage(this, 'preview-documento')">
-        <label for="documento" class="upload-label">
-          <div class="upload-icon">🪪</div>
-          <p class="upload-title">Documento com Foto (RG ou CNH)</p>
-          <p class="upload-hint">Toque para tirar foto ou escolher arquivo</p>
-          <span class="upload-optional">Opcional — agiliza ainda mais a conferência</span>
-        </label>
-        <div class="upload-preview" id="preview-documento" style="display: none;">
-          <img id="preview-documento-img" src="" alt="Preview documento de identidade">
-          <button type="button" class="preview-remove" onclick="removeImage('documento', 'preview-documento')">✕ Remover</button>
-        </div>
-      </div>
-
       <div class="step-nav">
         <button type="button" class="btn-back" onclick="prevStep(4)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -312,9 +297,113 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         STEP 5 — Confirmação e Envio
+         STEP 5 — Documento de Identificação (RG, CNH, Certidão)
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step" id="step-5">
+      <div class="step-header">
+        <div class="step-icon">🪪</div>
+        <h2 class="step-title">Documento de Identificação</h2>
+        <p class="step-subtitle">Envie uma foto de documento oficial (CNH, RG ou Certidão de Nascimento)</p>
+      </div>
+
+      <div class="upload-area" id="upload-documento">
+        <input type="file" id="documento" name="documento"
+               accept="image/*,application/pdf" class="upload-input"
+               onchange="previewImage(this, 'preview-documento')">
+        <label for="documento" class="upload-label">
+          <div class="upload-icon">🪪</div>
+          <p class="upload-title">Foto do RG, CNH ou Certidão</p>
+          <p class="upload-hint">Toque para tirar foto ou escolher arquivo</p>
+          <span class="upload-optional">A inteligência artificial extrairá seu nome e CPF automaticamente</span>
+        </label>
+        <div class="upload-preview" id="preview-documento" style="display: none;">
+          <img id="preview-documento-img" src="" alt="Preview documento de identificação">
+          <button type="button" class="preview-remove" onclick="removeImage('documento', 'preview-documento')">✕ Remover</button>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" onclick="prevStep(5)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-next" onclick="nextStep(5)">
+          Próximo
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 6 — Endereço Residencial
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="form-step" id="step-6">
+      <div class="step-header">
+        <div class="step-icon">🏠</div>
+        <h2 class="step-title">Endereço Residencial</h2>
+        <p class="step-subtitle">Informe seu endereço para cadastro</p>
+      </div>
+
+      <div class="form-fields">
+        <!-- CEP com busca automática -->
+        <div class="field-row">
+          <div class="field-group" style="flex: 1;">
+            <label class="field-label" for="cep">CEP</label>
+            <input class="field-input" type="tel" id="cep" name="cep"
+                   placeholder="00000-000" inputmode="numeric" maxlength="9"
+                   oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)">
+            <span class="field-hint" id="cep-hint" style="font-size: 11px; color: #64748b;">Digite o CEP para preencher o endereço</span>
+          </div>
+          <div class="field-group" style="flex: 1;">
+            <label class="field-label" for="numero">Número</label>
+            <input class="field-input" type="text" id="numero" name="numero" placeholder="Ex: 120">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="logradouro">Logradouro / Rua</label>
+          <input class="field-input" type="text" id="logradouro" name="logradouro" placeholder="Ex: Av. Principal, Rua das Flores...">
+        </div>
+
+        <div class="field-row">
+          <div class="field-group" style="flex: 2;">
+            <label class="field-label" for="bairro">Bairro</label>
+            <input class="field-input" type="text" id="bairro" name="bairro" placeholder="Seu bairro">
+          </div>
+          <div class="field-group" style="flex: 1;">
+            <label class="field-label" for="complemento">Complemento</label>
+            <input class="field-input" type="text" id="complemento" name="complemento" placeholder="Apto, Bloco">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group" style="flex: 2;">
+            <label class="field-label" for="cidade">Cidade</label>
+            <input class="field-input" type="text" id="cidade" name="cidade" value="<%= @unit.city %>" placeholder="Cidade">
+          </div>
+          <div class="field-group" style="flex: 1;">
+            <label class="field-label" for="uf">UF</label>
+            <input class="field-input" type="text" id="uf" name="uf" maxlength="2" placeholder="UF" style="text-transform: uppercase;">
+          </div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" onclick="prevStep(6)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-next" onclick="nextStep(6)">
+          Próximo
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 7 — Confirmação e Envio
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="form-step" id="step-7">
       <div class="step-header">
         <div class="step-icon">✅</div>
         <h2 class="step-title">Confirmar Check-in</h2>
@@ -340,11 +429,16 @@
       <div class="review-card">
         <h3 class="review-section-title">Documentos Anexados</h3>
         <div class="review-row"><span class="review-key">Pedido Médico</span><span class="review-val" id="review-pedido-status">—</span></div>
-        <div class="review-row"><span class="review-key">Documento de Identidade</span><span class="review-val" id="review-documento-status">—</span></div>
+        <div class="review-row"><span class="review-key">Documento (RG/CNH/Certidão)</span><span class="review-val" id="review-documento-status">—</span></div>
+      </div>
+
+      <div class="review-card" id="review-card-endereco" style="display: none;">
+        <h3 class="review-section-title">Endereço</h3>
+        <div class="review-row"><span class="review-key">Logradouro</span><span class="review-val" id="review-endereco-texto">—</span></div>
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-back" onclick="prevStep(5)">
+        <button type="button" class="btn-back" onclick="prevStep(7)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Voltar
         </button>
@@ -361,15 +455,48 @@
 
 <script>
 let currentStep = 1;
-const totalSteps = 5;
+const totalSteps = 7;
 
 const stepLabels = {
   1: 'Tipo de Atendimento',
   2: 'Senha do Totem',
   3: 'Cobertura',
   4: 'Pedido Médico',
-  5: 'Confirmação'
+  5: 'Documento (RG/CNH/Certidão)',
+  6: 'Endereço Residencial',
+  7: 'Confirmação'
 };
+
+// ────────────────────────────────────────────────────────────────
+// Prevent premature form submit on Enter key ("Ir" on phone keyboard)
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('checkin-form');
+  if (!form) return;
+
+  form.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      // Don't submit the form
+      e.preventDefault();
+      // Advance to next step if not at final step
+      if (currentStep < totalSteps) {
+        nextStep(currentStep);
+      }
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    if (currentStep < totalSteps) {
+      e.preventDefault();
+      return false;
+    }
+    if (_requisicaoDT.files.length > 0) {
+      const camInput = document.getElementById('requisicao_camera');
+      const arqInput = document.getElementById('requisicao_arquivo');
+      if (camInput) camInput.files = _requisicaoDT.files;
+      if (arqInput) arqInput.disabled = true;
+    }
+  }, { capture: true });
+});
 
 function showStep(step) {
   document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
@@ -387,17 +514,19 @@ function showStep(step) {
   const labelEl = document.getElementById('progress-label');
   if (labelEl) labelEl.textContent = stepLabels[step] || '';
 
-  if (step === 5) buildReview();
+  if (step === 7) buildReview();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function nextStep(current) {
+  if (current >= totalSteps) return;
   currentStep = current + 1;
   showStep(currentStep);
 }
 
 function prevStep(current) {
+  if (current <= 1) return;
   currentStep = current - 1;
   showStep(currentStep);
 }
@@ -538,19 +667,42 @@ function removeAllRequisicoes() {
   document.getElementById('preview-requisicao-container').innerHTML = '';
 }
 
-// Before form submit, inject accumulated files
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('checkin-form');
-  if (!form) return;
-  form.addEventListener('submit', function(e) {
-    if (_requisicaoDT.files.length > 0) {
-      const camInput = document.getElementById('requisicao_camera');
-      const arqInput = document.getElementById('requisicao_arquivo');
-      camInput.files = _requisicaoDT.files;
-      arqInput.disabled = true;
-    }
-  }, { capture: true });
-});
+// ────────────────────────────────────────────────────────────────
+// CEP Máscara e Busca automática (ViaCEP)
+function mascaraCEP(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 5) {
+    input.value = v.substring(0, 5) + '-' + v.substring(5, 8);
+  } else {
+    input.value = v;
+  }
+}
+
+function buscarCEP(valor) {
+  const cep = valor.replace(/\D/g, '');
+  if (cep.length !== 8) return;
+
+  const hint = document.getElementById('cep-hint');
+  if (hint) hint.textContent = '🔍 Buscando endereço...';
+
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.erro) {
+        if (data.logradouro) document.getElementById('logradouro').value = data.logradouro;
+        if (data.bairro) document.getElementById('bairro').value = data.bairro;
+        if (data.localidade) document.getElementById('cidade').value = data.localidade;
+        if (data.uf) document.getElementById('uf').value = data.uf;
+        if (hint) hint.textContent = '✅ Endereço preenchido automaticamente!';
+        document.getElementById('numero')?.focus();
+      } else {
+        if (hint) hint.textContent = '⚠️ CEP não encontrado, preencha manualmente.';
+      }
+    })
+    .catch(() => {
+      if (hint) hint.textContent = '⚠️ Não foi possível buscar o CEP no momento.';
+    });
+}
 
 // ────────────────────────────────────────────────────────────────
 // Review / Summary Builder
@@ -593,5 +745,24 @@ function buildReview() {
 
   const docInput = document.getElementById('documento');
   set('review-documento-status', docInput.files.length > 0 ? '🪪 Foto anexada ✅' : '(não enviada)');
+
+  // Endereço review
+  const rua = val('logradouro');
+  const num = val('numero');
+  const bairro = val('bairro');
+  const cid = val('cidade');
+  const uf = val('uf');
+  const cardEnd = document.getElementById('review-card-endereco');
+  if (rua || cid) {
+    cardEnd.style.display = 'block';
+    const endCompleto = [
+      rua && (num ? `${rua}, ${num}` : rua),
+      bairro,
+      cid && (uf ? `${cid}/${uf}` : cid)
+    ].filter(Boolean).join(' - ');
+    set('review-endereco-texto', endCompleto || '—');
+  } else {
+    cardEnd.style.display = 'none';
+  }
 }
 </script>

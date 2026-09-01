@@ -79,7 +79,8 @@ class CheckinController < ApplicationController
       :nome, :cpf, :data_nascimento, :sexo_biologico,
       :telefone, :whatsapp, :cidade_atendimento,
       :cobertura_tipo,
-      :convenio, :plano, :numero_carteira, :validade_carteira
+      :convenio, :plano, :numero_carteira, :validade_carteira,
+      :logradouro, :numero, :bairro, :cidade, :uf, :cep, :complemento
     )
   end
 end
