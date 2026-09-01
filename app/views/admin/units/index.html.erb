@@ -78,11 +78,11 @@
                   <% end %>
                 </td>
 
-                <!-- Check-in URL -->
+                <!-- Check-in URL (WhatsApp / Remoto) -->
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2 max-w-md">
-                    <input type="text" value="<%= unit.checkin_url(host: request.host_with_port) %>" readonly id="unit-url-<%= unit.id %>" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 focus:outline-none select-all truncate">
-                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('unit-url-<%= unit.id %>').value); this.innerText = 'Copiado!'; setTimeout(() => this.innerText = 'Copiar', 2000);" class="shrink-0 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors cursor-pointer">
+                    <input type="text" value="<%= unit.link_url(host: request.host_with_port) %>" readonly id="unit-url-<%= unit.id %>" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 focus:outline-none select-all truncate">
+                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('unit-url-<%= unit.id %>').value); this.innerText = 'Copiado!'; setTimeout(() => this.innerText = 'Copiar', 2000);" class="shrink-0 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors cursor-pointer" title="Copiar link para WhatsApp">
                       Copiar
                     </button>
                   </div>

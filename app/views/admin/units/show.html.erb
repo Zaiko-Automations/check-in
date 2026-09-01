@@ -60,15 +60,22 @@
         </div>
       </div>
 
-      <div class="pt-4 border-t border-slate-100">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-secondary mb-3">Link Direto de Check-in</h3>
-        <p class="text-xs text-slate-500 mb-2">Este link pode ser enviado para pacientes ou aberto em tablets de autoatendimento:</p>
-        
-        <div class="flex items-center gap-2">
-          <input type="text" value="<%= @unit.checkin_url(host: request.host_with_port) %>" readonly id="unit-url-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-700 focus:outline-none select-all">
-          <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('unit-url-input').value); this.innerText = 'Copiado!'; setTimeout(() => this.innerText = 'Copiar', 2000);" class="shrink-0 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer">
-            Copiar Link
-          </button>
+      <div class="pt-4 border-t border-slate-100 space-y-4">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-secondary mb-1">Link para Envio (WhatsApp / Remoto)</h3>
+          <p class="text-xs text-slate-500 mb-2">Envie este link para o paciente preencher antes de sair de casa:</p>
+          
+          <div class="flex items-center gap-2">
+            <input type="text" value="<%= @unit.link_url(host: request.host_with_port) %>" readonly id="unit-link-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-700 focus:outline-none select-all">
+            <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('unit-link-input').value); this.innerText = 'Copiado!'; setTimeout(() => this.innerText = 'Copiar', 2000);" class="shrink-0 px-4 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl text-xs font-bold transition-colors cursor-pointer">
+              Copiar Link
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">URL do QR Code (Presencial / Balcão)</h3>
+          <input type="text" value="<%= @unit.qr_url(host: request.host_with_port) %>" readonly id="unit-qr-input" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-mono text-slate-500 focus:outline-none select-all">
         </div>
       </div>
     </div>

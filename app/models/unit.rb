@@ -8,7 +8,7 @@ class Unit < ApplicationRecord
 
   scope :active, -> { where(active: true) }
 
-  def checkin_url(host: nil, origem: 'qrcode')
+  def checkin_url(host: nil, origem: 'link')
     base = host || ENV.fetch('APP_HOST', 'check-in.zaikohub.com.br')
     "https://#{base}/checkin/#{token}?origem=#{origem}"
   end
