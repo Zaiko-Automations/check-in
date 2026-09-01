@@ -59,10 +59,10 @@
         <table class="min-w-full divide-y divide-slate-100">
           <thead class="bg-slate-50/50">
             <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">ID</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Senha / Tipo</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Paciente</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Tipo de Pedido</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cobertura</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade / Unidade</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Data</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Link Conversa</th>
               <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
@@ -71,9 +71,32 @@
           <tbody class="divide-y divide-slate-100 bg-white">
             <% @walk_ins.each do |w| %>
               <tr class="hover:bg-slate-50/50 transition-colors">
-                <!-- ID -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
-                  #<%= w.id %>
+                <!-- Senha & Prioridade -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <% if w.numero_senha.present? %>
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg shadow-sm w-max">
+                        🎟️ <%= w.numero_senha %>
+                      </span>
+                    <% else %>
+                      <span class="text-xs text-slate-400 font-mono">#<%= w.id %></span>
+                    <% end %>
+
+                    <div class="flex items-center gap-1">
+                      <% if w.prioridade == 'superprioridade' %>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">🔵 Super 80+</span>
+                      <% elsif w.prioridade == 'preferencial' %>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">🟡 Preferencial</span>
+                      <% else %>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">🟢 Geral</span>
+                      <% end %>
+                      <% if w.origem == 'link' %>
+                        <span class="text-[10px] text-slate-400 font-semibold" title="Remoto (Link / Em Casa)">🏠</span>
+                      <% else %>
+                        <span class="text-[10px] text-slate-400 font-semibold" title="Presencial (QR Code)">📱</span>
+                      <% end %>
+                    </div>
+                  </div>
                 </td>
                 
                 <!-- Patient Name & CPF -->
@@ -103,9 +126,10 @@
                   <% end %>
                 </td>
 
-                <!-- Cidade -->
+                <!-- Cidade & Unidade -->
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                  <%= w.patient.cidade_atendimento.presence || w.unit.city.presence || "(não informada)" %>
+                  <div><%= w.patient.cidade_atendimento.presence || w.unit.city.presence || "(não informada)" %></div>
+                  <div class="text-[11px] text-slate-400"><%= w.unit.name %></div>
                 </td>
 
                 <!-- Data -->

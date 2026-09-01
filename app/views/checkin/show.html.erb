@@ -1,95 +1,92 @@
-<% content_for :title, "Check-in — #{@unit.name}" %>
+<%
+  lab_name = AppSetting.get(:lab_name) || ENV.fetch('LAB_NAME', 'Check-in Expresso')
+  content_for :title, "Check-in — #{@unit.name}"
+%>
 
 <div class="form-wrapper" id="checkin-form-wrapper">
+
+  <!-- Welcome Header -->
+  <div style="text-align: center; margin-bottom: 24px;">
+    <div style="width: 56px; height: 56px; margin: 0 auto 12px; background: linear-gradient(135deg, #002b47, #23c0b5); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 4px 12px rgba(35, 192, 181, 0.25);">
+      🏥
+    </div>
+    <h1 style="font-size: 19px; font-weight: 700; color: #0f172a; margin: 0 0 4px; line-height: 1.3;">
+      Bem-vindo(a) ao Check-in Expresso
+    </h1>
+    <p style="font-size: 14px; font-weight: 600; color: #23c0b5; margin: 0 0 2px;">
+      <%= lab_name %>
+    </p>
+    <p style="font-size: 12px; color: #64748b; margin: 0;">
+      📍 <%= @unit.name %> <%= "(#{@unit.city})" if @unit.city.present? %>
+    </p>
+  </div>
 
   <!-- Progress Bar -->
   <div class="progress-bar-container">
     <div class="progress-track">
-      <div class="progress-fill" id="progress-fill" style="width: 25%"></div>
+      <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
     </div>
     <div class="progress-steps">
       <span class="step-dot active" data-step="1">1</span>
       <span class="step-dot" data-step="2">2</span>
       <span class="step-dot" data-step="3">3</span>
       <span class="step-dot" data-step="4">4</span>
+      <span class="step-dot" data-step="5">5</span>
     </div>
-    <p class="progress-label" id="progress-label">Dados Pessoais</p>
+    <p class="progress-label" id="progress-label">Tipo de Atendimento</p>
   </div>
 
   <%= form_with url: checkin_submit_path(token: @unit.token), method: :post,
                 html: { id: 'checkin-form', enctype: 'multipart/form-data', novalidate: true } do |f| %>
 
+    <input type="hidden" name="origem" value="<%= @origem %>">
+    <input type="hidden" id="cidade_atendimento" name="cidade_atendimento" value="<%= @unit.city %>">
+
     <!-- ══════════════════════════════════════════════════════════
-         STEP 1 — Dados Pessoais
+         STEP 1 — Escolha do Atendimento / Prioridade
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step active" id="step-1">
       <div class="step-header">
-        <div class="step-icon">👤</div>
-        <h1 class="step-title">Dados Pessoais</h1>
-        <p class="step-subtitle">Preencha suas informações básicas</p>
+        <div class="step-icon">🏷️</div>
+        <h2 class="step-title">Tipo de Atendimento</h2>
+        <p class="step-subtitle">Selecione a sua prioridade de atendimento</p>
       </div>
 
-      <div class="form-fields">
-        <div class="field-group">
-          <label class="field-label" for="nome">Nome completo <span class="required">*</span></label>
-          <input class="field-input" type="text" id="nome" name="nome"
-                 placeholder="Seu nome completo" autocomplete="name" required>
-          <span class="field-error" id="nome-error"></span>
-        </div>
+      <input type="hidden" id="prioridade" name="prioridade" value="geral">
 
-        <div class="field-group">
-          <label class="field-label" for="cpf">CPF <span class="required">*</span></label>
-          <input class="field-input" type="tel" id="cpf" name="cpf"
-                 placeholder="000.000.000-00" inputmode="numeric" required>
-          <span class="field-error" id="cpf-error"></span>
-        </div>
-
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label" for="data_nascimento">Data de Nascimento <span class="required">*</span></label>
-            <input class="field-input" type="date" id="data_nascimento" name="data_nascimento" required>
-            <span class="field-error" id="nascimento-error"></span>
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+        <!-- Opção Geral -->
+        <button type="button" class="priority-btn active" id="btn-prioridade-geral" onclick="selectPriority('geral')"
+                style="display: flex; align-items: center; gap: 14px; padding: 16px; border: 2px solid #23c0b5; background: rgba(35, 192, 181, 0.06); border-radius: 16px; text-align: left; cursor: pointer; transition: all 0.2s;">
+          <span style="font-size: 28px;">🟢</span>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 700; color: #0f172a;">Geral</div>
+            <div style="font-size: 12px; color: #64748b;">Atendimento padrão por ordem de chegada</div>
           </div>
+          <span class="priority-check" style="font-size: 18px; color: #23c0b5;">✓</span>
+        </button>
 
-          <div class="field-group">
-            <label class="field-label" for="sexo_biologico">Sexo Biológico <span class="required">*</span></label>
-            <select class="field-input field-select" id="sexo_biologico" name="sexo_biologico" required>
-              <option value="">Selecionar</option>
-              <option value="M">Masculino</option>
-              <option value="F">Feminino</option>
-            </select>
+        <!-- Opção Preferencial -->
+        <button type="button" class="priority-btn" id="btn-prioridade-preferencial" onclick="selectPriority('preferencial')"
+                style="display: flex; align-items: center; gap: 14px; padding: 16px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 16px; text-align: left; cursor: pointer; transition: all 0.2s;">
+          <span style="font-size: 28px;">🟡</span>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 700; color: #0f172a;">Preferencial</div>
+            <div style="font-size: 12px; color: #64748b;">Idosos (60+), Gestantes, PCD ou com crianças de colo</div>
           </div>
-        </div>
+          <span class="priority-check" style="font-size: 18px; color: #23c0b5; display: none;">✓</span>
+        </button>
 
-        <div class="field-group">
-          <label class="field-label" for="telefone">Telefone / WhatsApp <span class="required">*</span></label>
-          <input class="field-input" type="tel" id="telefone" name="telefone"
-                 placeholder="(11) 99999-9999" inputmode="tel" autocomplete="tel" required>
-        </div>
-
-        <div class="whatsapp-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" id="whatsapp" name="whatsapp" value="true" class="toggle-input">
-            <span class="toggle-switch"></span>
-            <span class="toggle-text">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.004 0C5.374 0 0 5.373 0 11.997c0 2.117.554 4.1 1.523 5.827L.057 23.428a.498.498 0 00.611.61l5.702-1.447A11.955 11.955 0 0012.004 24C18.63 24 24 18.626 24 12.003 24 5.373 18.63 0 12.004 0z"/></svg>
-              Este número tem WhatsApp
-            </span>
-          </label>
-        </div>
-
-        <% if Unit.active.count > 1 %>
-          <div class="field-group">
-            <label class="field-label" for="cidade_atendimento">Cidade do Atendimento <span class="required">*</span></label>
-            <select class="field-input field-select" id="cidade_atendimento" name="cidade_atendimento" required>
-              <% Unit.active.pluck(:city).uniq.compact.each do |city| %>
-                <option value="<%= city %>" <%= 'selected' if city == @unit.city %>><%= city %></option>
-              <% end %>
-            </select>
+        <!-- Opção Superprioridade 80+ -->
+        <button type="button" class="priority-btn" id="btn-prioridade-superprioridade" onclick="selectPriority('superprioridade')"
+                style="display: flex; align-items: center; gap: 14px; padding: 16px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 16px; text-align: left; cursor: pointer; transition: all 0.2s;">
+          <span style="font-size: 28px;">🔵</span>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 700; color: #0f172a;">Superprioridade (80+ anos)</div>
+            <div style="font-size: 12px; color: #64748b;">Prioridade especial assegurada por lei federal</div>
           </div>
-        <% else %>
-          <input type="hidden" id="cidade_atendimento" name="cidade_atendimento" value="<%= @unit.city %>">
-        <% end %>
+          <span class="priority-check" style="font-size: 18px; color: #23c0b5; display: none;">✓</span>
+        </button>
       </div>
 
       <button type="button" class="btn-next" onclick="nextStep(1)">
@@ -99,9 +96,66 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         STEP 2 — Cobertura
+         STEP 2 — Senha de Atendimento (Física)
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step" id="step-2">
+      <div class="step-header">
+        <div class="step-icon">🎟️</div>
+        <h2 class="step-title">Sua Senha</h2>
+        <p class="step-subtitle">Digite sua senha ou tire uma foto do papel impresso</p>
+      </div>
+
+      <div class="form-fields">
+        <!-- Digitar Senha -->
+        <div class="field-group">
+          <label class="field-label" for="numero_senha">Número da Senha</label>
+          <input class="field-input" type="text" id="numero_senha" name="numero_senha"
+                 placeholder="Ex: G-042 ou P-015" autocomplete="off"
+                 style="font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.05em; text-transform: uppercase;">
+          <p class="field-hint" style="font-size: 12px; color: #64748b; margin-top: 4px; text-align: center;">
+            Digite o código impresso no papel do totem
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; margin: 16px 0;">
+          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+          <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">ou</span>
+          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
+        </div>
+
+        <!-- Foto da Senha -->
+        <div class="upload-area" id="upload-senha">
+          <input type="file" id="foto_senha" name="foto_senha"
+                 accept="image/*" class="upload-input"
+                 onchange="previewImage(this, 'preview-senha')">
+          <label for="foto_senha" class="upload-label">
+            <div class="upload-icon">📷</div>
+            <p class="upload-title">Tirar Foto do Papel da Senha</p>
+            <p class="upload-hint">Nossa inteligência artificial identificará o número automaticamente</p>
+          </label>
+          <div class="upload-preview" id="preview-senha" style="display: none;">
+            <img id="preview-senha-img" src="" alt="Preview da senha">
+            <button type="button" class="preview-remove" onclick="removeImage('foto_senha', 'preview-senha')">✕ Remover</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" onclick="prevStep(2)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-next" onclick="nextStep(2)">
+          Próximo
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 3 — Cobertura (Particular ou Convênio)
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="form-step" id="step-3">
       <div class="step-header">
         <div class="step-icon">🏥</div>
         <h2 class="step-title">Cobertura</h2>
@@ -131,25 +185,20 @@
         <div class="field-group">
           <label class="field-label" for="convenio">Nome do Convênio <span class="required">*</span></label>
           <input class="field-input" type="text" id="convenio" name="convenio"
-                 placeholder="Ex: Unimed, Bradesco Saúde...">
+                 placeholder="Ex: Unimed, Bradesco Saúde, Cassi...">
         </div>
 
         <div class="field-row">
           <div class="field-group">
             <label class="field-label" for="plano">Plano</label>
             <input class="field-input" type="text" id="plano" name="plano"
-                   placeholder="Ex: Executivo Plus">
+                   placeholder="Ex: Especial, Básico...">
           </div>
           <div class="field-group">
             <label class="field-label" for="numero_carteira">Nº Carteira</label>
             <input class="field-input" type="text" id="numero_carteira" name="numero_carteira"
                    placeholder="Número da carteira">
           </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label" for="validade_carteira">Validade da Carteira</label>
-          <input class="field-input" type="date" id="validade_carteira" name="validade_carteira">
         </div>
 
         <!-- Upload carteira convênio -->
@@ -160,94 +209,12 @@
           <label for="carteira_convenio" class="upload-label">
             <div class="upload-icon">📷</div>
             <p class="upload-title">Foto da Carteirinha</p>
-            <p class="upload-hint">Toque para tirar foto, escolher da galeria ou anexar arquivo</p>
+            <p class="upload-hint">Toque para tirar foto ou escolher arquivo</p>
           </label>
           <div class="upload-preview" id="preview-carteira" style="display: none;">
             <img id="preview-carteira-img" src="" alt="Preview carteirinha">
             <button type="button" class="preview-remove" onclick="removeImage('carteira_convenio', 'preview-carteira')">✕ Remover</button>
           </div>
-        </div>
-      </div>
-
-      <div class="step-nav">
-        <button type="button" class="btn-back" onclick="prevStep(2)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          Voltar
-        </button>
-        <button type="button" class="btn-next" onclick="nextStep(2)">
-          Próximo
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════
-         STEP 3 — Requisição Médica
-    ═══════════════════════════════════════════════════════════════ -->
-    <div class="form-step" id="step-3">
-      <div class="step-header">
-        <div class="step-icon">📋</div>
-        <h2 class="step-title">Requisição Médica</h2>
-        <p class="step-subtitle">Envie uma foto do pedido do seu médico (opcional)</p>
-      </div>
-
-      <div class="upload-area" id="upload-requisicao">
-        <%# Input 1: Câmera (tira uma foto por vez, acumula) %>
-        <input type="file" id="requisicao_camera" name="requisicoes_medicas[]"
-               accept="image/*" capture="environment" class="upload-input" style="display:none"
-               onchange="accumulateImage(this, 'preview-requisicao')">
-        <%# Input 2: Galeria / Arquivo (múltiplos de uma vez) %>
-        <input type="file" id="requisicao_arquivo" name="requisicoes_medicas[]"
-               accept="image/*,application/pdf" multiple class="upload-input" style="display:none"
-               onchange="accumulateImages(this, 'preview-requisicao')">
-
-        <label class="upload-label" id="label-requisicao">
-          <div class="upload-icon">📋</div>
-          <p class="upload-title">Pedido Médico</p>
-          <p class="upload-hint">Escolha como deseja enviar:</p>
-          <div style="display: flex; gap: 8px; margin-top: 12px; justify-content: center; flex-wrap: wrap;">
-            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
-                    style="padding: 8px 16px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 13px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
-              📷 Tirar Foto
-            </button>
-            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
-                    style="padding: 8px 16px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 13px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
-              📂 Escolher Arquivo / Galeria
-            </button>
-          </div>
-          <span class="upload-optional" style="margin-top: 10px;">Opcional — pode adicionar várias páginas</span>
-        </label>
-
-        <div class="upload-preview" id="preview-requisicao" style="display: none;">
-          <p style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;" id="preview-requisicao-count"></p>
-          <div id="preview-requisicao-container" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 12px;"></div>
-          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
-                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
-              📷 + Mais Foto
-            </button>
-            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
-                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
-              📂 + Mais Arquivo
-            </button>
-            <button type="button" class="preview-remove" onclick="removeAllRequisicoes()">✕ Remover Todos</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="upload-area" id="upload-documento" style="margin-top: 24px;">
-        <input type="file" id="documento" name="documento"
-               accept="image/*,application/pdf" class="upload-input"
-               onchange="previewImage(this, 'preview-documento')">
-        <label for="documento" class="upload-label">
-          <div class="upload-icon">🪪</div>
-          <p class="upload-title">Foto do Documento (RG/CNH)</p>
-          <p class="upload-hint">Toque para tirar foto, escolher da galeria ou anexar arquivo</p>
-          <span class="upload-optional">Opcional — pule se não tiver em mãos</span>
-        </label>
-        <div class="upload-preview" id="preview-documento" style="display: none;">
-          <img id="preview-documento-img" src="" alt="Preview documento de identidade">
-          <button type="button" class="preview-remove" onclick="removeImage('documento', 'preview-documento')">✕ Remover</button>
         </div>
       </div>
 
@@ -264,40 +231,72 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         STEP 4 — Revisão e Confirmação
+         STEP 4 — Pedido Médico & Documento
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step" id="step-4">
       <div class="step-header">
-        <div class="step-icon">✅</div>
-        <h2 class="step-title">Confirmar Dados</h2>
-        <p class="step-subtitle">Revise as informações antes de enviar</p>
+        <div class="step-icon">📋</div>
+        <h2 class="step-title">Pedido Médico</h2>
+        <p class="step-subtitle">Envie fotos do pedido do seu médico (suporta várias folhas)</p>
       </div>
 
-      <div class="review-card">
-        <h3 class="review-section-title">Dados Pessoais</h3>
-        <div class="review-row"><span class="review-key">Nome</span><span class="review-val" id="review-nome">—</span></div>
-        <div class="review-row"><span class="review-key">CPF</span><span class="review-val" id="review-cpf">—</span></div>
-        <div class="review-row"><span class="review-key">Nascimento</span><span class="review-val" id="review-nascimento">—</span></div>
-        <div class="review-row"><span class="review-key">Sexo</span><span class="review-val" id="review-sexo">—</span></div>
-        <div class="review-row"><span class="review-key">Telefone</span><span class="review-val" id="review-telefone">—</span></div>
-        <div class="review-row"><span class="review-key">WhatsApp</span><span class="review-val" id="review-whatsapp">—</span></div>
-        <div class="review-row"><span class="review-key">Cidade do Atendimento</span><span class="review-val" id="review-cidade-atendimento">—</span></div>
-      </div>
+      <div class="upload-area" id="upload-requisicao">
+        <input type="file" id="requisicao_camera" name="requisicoes_medicas[]"
+               accept="image/*" capture="environment" class="upload-input" style="display:none"
+               onchange="accumulateImage(this, 'preview-requisicao')">
+        <input type="file" id="requisicao_arquivo" name="requisicoes_medicas[]"
+               accept="image/*,application/pdf" multiple class="upload-input" style="display:none"
+               onchange="accumulateImages(this, 'preview-requisicao')">
 
-      <div class="review-card">
-        <h3 class="review-section-title">Cobertura</h3>
-        <div class="review-row"><span class="review-key">Tipo</span><span class="review-val" id="review-cobertura">—</span></div>
-        <div id="review-convenio-details">
-          <div class="review-row"><span class="review-key">Convênio</span><span class="review-val" id="review-convenio-nome">—</span></div>
-          <div class="review-row"><span class="review-key">Plano</span><span class="review-val" id="review-plano">—</span></div>
+        <label class="upload-label" id="label-requisicao">
+          <div class="upload-icon">📄</div>
+          <p class="upload-title">Fotos do Pedido Médico</p>
+          <p class="upload-hint">Tire uma foto clara de cada folha do pedido</p>
+          <div style="display: flex; gap: 8px; margin-top: 12px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
+                    style="padding: 10px 18px; border: 1.5px solid #23c0b5; border-radius: 10px; font-size: 13px; font-weight: 700; color: #23c0b5; background: transparent; cursor: pointer;">
+              📷 Tirar Foto
+            </button>
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
+                    style="padding: 10px 18px; border: 1.5px solid #23c0b5; border-radius: 10px; font-size: 13px; font-weight: 700; color: #23c0b5; background: transparent; cursor: pointer;">
+              📂 Galeria / Arquivo
+            </button>
+          </div>
+          <span class="upload-optional" style="margin-top: 10px;">Suporta múltiplas páginas</span>
+        </label>
+
+        <div class="upload-preview" id="preview-requisicao" style="display: none;">
+          <p style="font-size: 13px; font-weight: 700; color: #002b47; margin-bottom: 8px;" id="preview-requisicao-count"></p>
+          <div id="preview-requisicao-container" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 12px;"></div>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_camera').click()"
+                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📷 + Mais Foto
+            </button>
+            <button type="button" onclick="event.preventDefault(); document.getElementById('requisicao_arquivo').click()"
+                    style="padding: 6px 14px; border: 1.5px solid #23c0b5; border-radius: 8px; font-size: 12px; font-weight: 600; color: #23c0b5; background: transparent; cursor: pointer;">
+              📂 + Mais Arquivo
+            </button>
+            <button type="button" class="preview-remove" onclick="removeAllRequisicoes()">✕ Remover Todos</button>
+          </div>
         </div>
       </div>
 
-      <div class="review-card">
-        <h3 class="review-section-title">Documentos</h3>
-        <div class="review-row"><span class="review-key">Documento de Identidade</span><span class="review-val" id="review-documento-status">—</span></div>
-        <div class="review-row"><span class="review-key">Carteirinha</span><span class="review-val" id="review-carteira-status">—</span></div>
-        <div class="review-row"><span class="review-key">Pedido Médico</span><span class="review-val" id="review-pedido-status">—</span></div>
+      <!-- Documento (RG / CNH) -->
+      <div class="upload-area" id="upload-documento" style="margin-top: 24px;">
+        <input type="file" id="documento" name="documento"
+               accept="image/*,application/pdf" class="upload-input"
+               onchange="previewImage(this, 'preview-documento')">
+        <label for="documento" class="upload-label">
+          <div class="upload-icon">🪪</div>
+          <p class="upload-title">Documento com Foto (RG ou CNH)</p>
+          <p class="upload-hint">Toque para tirar foto ou escolher arquivo</p>
+          <span class="upload-optional">Opcional — agiliza ainda mais a conferência</span>
+        </label>
+        <div class="upload-preview" id="preview-documento" style="display: none;">
+          <img id="preview-documento-img" src="" alt="Preview documento de identidade">
+          <button type="button" class="preview-remove" onclick="removeImage('documento', 'preview-documento')">✕ Remover</button>
+        </div>
       </div>
 
       <div class="step-nav">
@@ -305,126 +304,141 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Voltar
         </button>
+        <button type="button" class="btn-next" onclick="nextStep(4)">
+          Próximo
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 5 — Confirmação e Envio
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="form-step" id="step-5">
+      <div class="step-header">
+        <div class="step-icon">✅</div>
+        <h2 class="step-title">Confirmar Check-in</h2>
+        <p class="step-subtitle">Revise os dados antes de finalizar</p>
+      </div>
+
+      <div class="review-card">
+        <h3 class="review-section-title">Atendimento</h3>
+        <div class="review-row"><span class="review-key">Prioridade</span><span class="review-val" id="review-prioridade">Geral</span></div>
+        <div class="review-row"><span class="review-key">Senha Retirada</span><span class="review-val" id="review-senha">—</span></div>
+        <div class="review-row"><span class="review-key">Unidade</span><span class="review-val"><%= @unit.name %></span></div>
+      </div>
+
+      <div class="review-card">
+        <h3 class="review-section-title">Cobertura</h3>
+        <div class="review-row"><span class="review-key">Tipo</span><span class="review-val" id="review-cobertura">Particular 💳</span></div>
+        <div id="review-convenio-details" style="display: none;">
+          <div class="review-row"><span class="review-key">Convênio</span><span class="review-val" id="review-convenio-nome">—</span></div>
+          <div class="review-row"><span class="review-key">Carteirinha</span><span class="review-val" id="review-carteira-status">—</span></div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <h3 class="review-section-title">Documentos Anexados</h3>
+        <div class="review-row"><span class="review-key">Pedido Médico</span><span class="review-val" id="review-pedido-status">—</span></div>
+        <div class="review-row"><span class="review-key">Documento de Identidade</span><span class="review-val" id="review-documento-status">—</span></div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" onclick="prevStep(5)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Voltar
+        </button>
         <button type="submit" class="btn-submit" id="btn-submit">
-          <span class="btn-submit-text">Confirmar Check-In</span>
-          <span class="btn-submit-loading" style="display:none;">Enviando...</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          Confirmar Check-in
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
         </button>
       </div>
     </div>
 
   <% end %>
+
 </div>
 
 <script>
-// ────────────────────────────────────────────────────────────────
-// Step Navigation
-// ────────────────────────────────────────────────────────────────
-const STEP_LABELS = ['', 'Dados Pessoais', 'Cobertura', 'Requisição Médica', 'Confirmação'];
 let currentStep = 1;
+const totalSteps = 5;
+
+const stepLabels = {
+  1: 'Tipo de Atendimento',
+  2: 'Senha do Totem',
+  3: 'Cobertura',
+  4: 'Pedido Médico',
+  5: 'Confirmação'
+};
 
 function showStep(step) {
   document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.step-dot').forEach(el => el.classList.remove('active', 'done'));
+  document.getElementById(`step-${step}`)?.classList.add('active');
 
-  const target = document.getElementById(`step-${step}`);
-  if (target) target.classList.add('active');
+  const pct = ((step - 1) / (totalSteps - 1)) * 100;
+  document.getElementById('progress-fill').style.width = `${Math.max(10, pct)}%`;
 
   document.querySelectorAll('.step-dot').forEach(dot => {
-    const n = parseInt(dot.dataset.step);
-    if (n < step) dot.classList.add('done');
-    if (n === step) dot.classList.add('active');
+    const s = parseInt(dot.dataset.step);
+    dot.classList.toggle('active', s === step);
+    dot.classList.toggle('completed', s < step);
   });
 
-  const pct = (step / 4) * 100;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-label').textContent = STEP_LABELS[step];
+  const labelEl = document.getElementById('progress-label');
+  if (labelEl) labelEl.textContent = stepLabels[step] || '';
+
+  if (step === 5) buildReview();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  currentStep = step;
 }
 
-function nextStep(from) {
-  if (!validateStep(from)) return;
-  if (from === 3) buildReview();
-  showStep(from + 1);
+function nextStep(current) {
+  currentStep = current + 1;
+  showStep(currentStep);
 }
 
-function prevStep(from) {
-  showStep(from - 1);
+function prevStep(current) {
+  currentStep = current - 1;
+  showStep(currentStep);
 }
 
 // ────────────────────────────────────────────────────────────────
-// Validation
-// ────────────────────────────────────────────────────────────────
-function validateStep(step) {
-  if (step === 1) {
-    const nome = document.getElementById('nome').value.trim();
-    const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
-    const nasc = document.getElementById('data_nascimento').value;
-    const sexo = document.getElementById('sexo_biologico').value;
-    const tel = document.getElementById('telefone').value.trim();
+// Prioridade Selector
+function selectPriority(tipo) {
+  document.getElementById('prioridade').value = tipo;
+  document.querySelectorAll('.priority-btn').forEach(btn => {
+    btn.style.borderColor = '#e2e8f0';
+    btn.style.background = '#ffffff';
+    const check = btn.querySelector('.priority-check');
+    if (check) check.style.display = 'none';
+  });
 
-    if (!nome) { showError('nome-error', 'Nome é obrigatório'); return false; }
-    clearError('nome-error');
-
-    if (cpf.length !== 11) { showError('cpf-error', 'CPF deve ter 11 dígitos'); return false; }
-    clearError('cpf-error');
-
-    if (!nasc) { showError('nascimento-error', 'Data de nascimento é obrigatória'); return false; }
-    clearError('nascimento-error');
-
-    if (!sexo) { alert('Selecione o sexo biológico'); return false; }
-    if (!tel) { alert('Telefone é obrigatório'); return false; }
+  const activeBtn = document.getElementById(`btn-prioridade-${tipo}`);
+  if (activeBtn) {
+    activeBtn.style.borderColor = '#23c0b5';
+    activeBtn.style.background = 'rgba(35, 192, 181, 0.06)';
+    const check = activeBtn.querySelector('.priority-check');
+    if (check) check.style.display = 'inline';
   }
-
-  if (step === 2) {
-    const tipo = document.getElementById('cobertura_tipo').value;
-    if (tipo === 'convenio') {
-      const conv = document.getElementById('convenio').value.trim();
-      if (!conv) { alert('Informe o nome do convênio'); return false; }
-    }
-  }
-
-  return true;
-}
-
-function showError(id, msg) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-  const inputId = id.replace('-error', '');
-  const input = document.getElementById(inputId);
-  if (input) input.classList.add('input-error');
-}
-
-function clearError(id) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = ''; el.style.display = 'none'; }
-  const inputId = id.replace('-error', '');
-  const input = document.getElementById(inputId);
-  if (input) input.classList.remove('input-error');
 }
 
 // ────────────────────────────────────────────────────────────────
-// Coverage Toggle
-// ────────────────────────────────────────────────────────────────
+// Coverage Selector
 function selectCoverage(tipo) {
   document.getElementById('cobertura_tipo').value = tipo;
-
-  document.querySelectorAll('.coverage-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(`btn-${tipo}`).classList.add('active');
+  document.getElementById('btn-particular').classList.toggle('active', tipo === 'particular');
+  document.getElementById('btn-convenio').classList.toggle('active', tipo === 'convenio');
 
   const fields = document.getElementById('convenio-fields');
-  fields.style.display = tipo === 'convenio' ? 'block' : 'none';
-
-  // Required toggles for convenio fields
-  const convInput = document.getElementById('convenio');
-  convInput.required = tipo === 'convenio';
+  if (tipo === 'convenio') {
+    fields.style.display = 'block';
+  } else {
+    fields.style.display = 'none';
+  }
 }
 
 // ────────────────────────────────────────────────────────────────
-// Image Preview
-// ────────────────────────────────────────────────────────────────
+// Single Image Preview
 function previewImage(input, previewId) {
   const preview = document.getElementById(previewId);
   const img = document.getElementById(`${previewId}-img`);
@@ -433,7 +447,7 @@ function previewImage(input, previewId) {
   if (input.files && input.files[0]) {
     const reader = new FileReader();
     reader.onload = e => {
-      img.src = e.target.result;
+      if (img) img.src = e.target.result;
       preview.style.display = 'block';
       label.style.display = 'none';
     };
@@ -452,8 +466,7 @@ function removeImage(inputId, previewId) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Accumulating file uploads for Pedido Médico (multi-input approach)
-// We maintain a DataTransfer object per input to accumulate files.
+// Multi-photo accumulator for Pedido Médico
 const _requisicaoDT = new DataTransfer();
 
 function _renderRequisicoesPreview() {
@@ -503,24 +516,15 @@ function _renderRequisicoesPreview() {
 
     container.appendChild(wrapper);
   });
-
-  // Sync the accumulated files back to both hidden inputs so they submit
-  const camInput = document.getElementById('requisicao_camera');
-  const arqInput = document.getElementById('requisicao_arquivo');
-  // We can only set files via DataTransfer; assign to one canonical input
-  // But since both have name=requisicoes_medicas[], just keep _requisicaoDT in sync
-  // The actual form submission uses a hidden clone — see FormData override below
 }
 
-// Called when camera captures one photo
 function accumulateImage(input, previewId) {
   if (!input.files || input.files.length === 0) return;
   _requisicaoDT.items.add(input.files[0]);
-  input.value = ''; // reset so same file can be added again
+  input.value = '';
   _renderRequisicoesPreview();
 }
 
-// Called when gallery/file selector returns one or more files
 function accumulateImages(input, previewId) {
   if (!input.files || input.files.length === 0) return;
   Array.from(input.files).forEach(f => _requisicaoDT.items.add(f));
@@ -529,49 +533,47 @@ function accumulateImages(input, previewId) {
 }
 
 function removeAllRequisicoes() {
-  // Clear DataTransfer
   while (_requisicaoDT.items.length > 0) _requisicaoDT.items.remove(0);
   _renderRequisicoesPreview();
   document.getElementById('preview-requisicao-container').innerHTML = '';
 }
 
-// Before form submit, inject the accumulated files into a fresh set of inputs
+// Before form submit, inject accumulated files
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('checkin-form') || document.querySelector('form[action*="checkin"]') || document.querySelector('form');
+  const form = document.getElementById('checkin-form');
   if (!form) return;
   form.addEventListener('submit', function(e) {
-    // Remove old hidden requisicao inputs
-    form.querySelectorAll('input[data-req-clone]').forEach(el => el.remove());
-
-    // For each accumulated file, create a hidden file-like input via DataTransfer
     if (_requisicaoDT.files.length > 0) {
-      // We need to attach actual File objects. The cleanest cross-browser way
-      // is to reuse one of the existing file inputs and set its files via DataTransfer.
       const camInput = document.getElementById('requisicao_camera');
       const arqInput = document.getElementById('requisicao_arquivo');
-      // Assign all accumulated to camera input (it has correct name)
       camInput.files = _requisicaoDT.files;
-      // Clear arquivo so it doesn't submit empty
       arqInput.disabled = true;
     }
   }, { capture: true });
 });
 
 // ────────────────────────────────────────────────────────────────
-// Review / Summary
+// Review / Summary Builder
 function buildReview() {
   const val = id => document.getElementById(id)?.value || '';
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—'; };
 
-  set('review-nome', val('nome'));
-  set('review-cpf', formatCPF(val('cpf')));
-  set('review-nascimento', formatDate(val('data_nascimento')));
+  const prioMap = {
+    'geral': '🟢 Geral',
+    'preferencial': '🟡 Preferencial (60+, Gestante, PCD)',
+    'superprioridade': '🔵 Superprioridade (80+ anos)'
+  };
+  set('review-prioridade', prioMap[val('prioridade')] || 'Geral');
 
-  const sexoMap = { M: 'Masculino', F: 'Feminino' };
-  set('review-sexo', sexoMap[val('sexo_biologico')] || val('sexo_biologico'));
-  set('review-telefone', formatPhone(val('telefone')));
-  set('review-whatsapp', document.getElementById('whatsapp').checked ? 'Sim ✅' : 'Não');
-  set('review-cidade-atendimento', val('cidade_atendimento') || '(não informada)');
+  const fotoSenhaInput = document.getElementById('foto_senha');
+  const senhaDigitada = val('numero_senha');
+  if (senhaDigitada) {
+    set('review-senha', senhaDigitada.toUpperCase());
+  } else if (fotoSenhaInput && fotoSenhaInput.files.length > 0) {
+    set('review-senha', '📷 Foto anexada (identificação automática)');
+  } else {
+    set('review-senha', '(não informada)');
+  }
 
   const tipo = val('cobertura_tipo');
   set('review-cobertura', tipo === 'convenio' ? 'Convênio 🏷️' : 'Particular 💳');
@@ -579,77 +581,17 @@ function buildReview() {
   const convDetails = document.getElementById('review-convenio-details');
   if (tipo === 'convenio') {
     convDetails.style.display = 'block';
-    set('review-convenio-nome', val('convenio'));
-    set('review-plano', val('plano') || '(não informado)');
+    set('review-convenio-nome', val('convenio') || '(não informado)');
+    const cartInput = document.getElementById('carteira_convenio');
+    set('review-carteira-status', cartInput.files.length > 0 ? '📷 Foto anexada ✅' : '(não enviada)');
   } else {
     convDetails.style.display = 'none';
   }
 
-  const documentoInput = document.getElementById('documento');
-  set('review-documento-status', documentoInput.files.length > 0 ? '📷 Foto anexada ✅' : '(não enviada)');
-
-  const carteiraInput = document.getElementById('carteira_convenio');
-  set('review-carteira-status', carteiraInput.files.length > 0 ? '📷 Foto anexada ✅' : '(não enviada)');
-
-  // Use accumulated DataTransfer count for pedido médico
   const pedidoCount = _requisicaoDT.files.length;
-  set('review-pedido-status', pedidoCount > 0 ? `📄 ${pedidoCount} página(s) anexada(s) ✅` : '(não enviada)');
+  set('review-pedido-status', pedidoCount > 0 ? `📄 ${pedidoCount} folha(s) anexada(s) ✅` : '(não enviada)');
+
+  const docInput = document.getElementById('documento');
+  set('review-documento-status', docInput.files.length > 0 ? '🪪 Foto anexada ✅' : '(não enviada)');
 }
-
-// ────────────────────────────────────────────────────────────────
-// Formatters
-// ────────────────────────────────────────────────────────────────
-function formatCPF(v) {
-  const d = v.replace(/\D/g, '');
-  if (d.length === 11) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
-  return v;
-}
-
-function formatPhone(v) {
-  const d = v.replace(/\D/g, '');
-  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
-  return v;
-}
-
-function formatDate(v) {
-  if (!v) return '—';
-  const [y,m,d] = v.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-// ────────────────────────────────────────────────────────────────
-// CPF Mask
-// ────────────────────────────────────────────────────────────────
-document.getElementById('cpf').addEventListener('input', function() {
-  let v = this.value.replace(/\D/g, '');
-  if (v.length > 11) v = v.slice(0, 11);
-  v = v.replace(/(\d{3})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d)/, '$1.$2');
-  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-  this.value = v;
-});
-
-// Phone mask
-document.getElementById('telefone').addEventListener('input', function() {
-  let v = this.value.replace(/\D/g, '');
-  if (v.length > 11) v = v.slice(0, 11);
-  if (v.length <= 10) {
-    v = v.replace(/(\d{2})(\d)/, '($1) $2');
-    v = v.replace(/(\d{4})(\d)/, '$1-$2');
-  } else {
-    v = v.replace(/(\d{2})(\d)/, '($1) $2');
-    v = v.replace(/(\d{5})(\d)/, '$1-$2');
-  }
-  this.value = v;
-});
-
-// Form submit loading state
-document.getElementById('checkin-form').addEventListener('submit', function() {
-  const btn = document.getElementById('btn-submit');
-  btn.querySelector('.btn-submit-text').style.display = 'none';
-  btn.querySelector('.btn-submit-loading').style.display = 'inline';
-  btn.querySelector('svg').style.display = 'none';
-  btn.disabled = true;
-});
 </script>

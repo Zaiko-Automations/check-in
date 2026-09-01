@@ -72,6 +72,9 @@ class SendWalkInWebhookJob < ApplicationJob
       walk_in_id:   walk_in.uid,
       id:           walk_in.id,
       submitted_at: walk_in.created_at.iso8601,
+      origem:       walk_in.origem,
+      prioridade:   walk_in.prioridade,
+      numero_senha: walk_in.numero_senha,
 
       laboratorio: {
         nome: lab_name,
@@ -106,6 +109,7 @@ class SendWalkInWebhookJob < ApplicationJob
       exams: walk_in.requested_exams.map { |e| { codigo: e.codigo, descricao: e.descricao, acuracia: e.acuracia } },
 
       documents: {
+        foto_senha:          walk_in.foto_senha_url,
         carteira_convenio:   walk_in.carteira_convenio_url,
         requisicoes_medicas: walk_in.requisicoes_medicas_urls,
         documento:           walk_in.documento_url

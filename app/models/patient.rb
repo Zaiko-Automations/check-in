@@ -4,10 +4,8 @@ class Patient < ApplicationRecord
   COBERTURA_TIPOS = %w[particular convenio].freeze
   SEXOS = { "M" => "Masculino", "F" => "Feminino" }.freeze
 
-  validates :nome, presence: true
-  validates :cpf, presence: true
   validates :cobertura_tipo, presence: true, inclusion: { in: COBERTURA_TIPOS }
-  validate :cpf_valido
+  validate :cpf_valido, if: -> { cpf.present? && cpf != '—' }
 
   def sexo_label
     SEXOS[sexo_biologico] || sexo_biologico

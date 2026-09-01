@@ -42,13 +42,15 @@ module Api
             end
           end
 
-          # 2. Update WalkIn attributes (solicitante, data_pedido_medico, link_conversa, status)
+          # 2. Update WalkIn attributes (solicitante, data_pedido_medico, link_conversa, numero_senha, prioridade, status)
           walk_in_updates = { status: 'pending' }
           walk_in_updates[:link_conversa] = extracted[:link_conversa] if extracted[:link_conversa].present?
           walk_in_updates[:solicitante_nome] = extracted[:solicitante_nome] if extracted[:solicitante_nome].present?
           walk_in_updates[:solicitante_conselho] = extracted[:solicitante_conselho] if extracted[:solicitante_conselho].present?
           walk_in_updates[:solicitante_especialidade] = extracted[:solicitante_especialidade] if extracted[:solicitante_especialidade].present?
           walk_in_updates[:data_pedido_medico] = extracted[:data_pedido_medico] if extracted[:data_pedido_medico].present?
+          walk_in_updates[:numero_senha] = extracted[:numero_senha] if extracted[:numero_senha].present?
+          walk_in_updates[:prioridade] = extracted[:prioridade] if extracted[:prioridade].present?
 
           # Filter only existing columns in walk_ins table to be 100% migration-safe
           valid_columns = WalkIn.column_names
@@ -113,13 +115,17 @@ module Api
         solicitante_conselho = nil
         solicitante_especialidade = nil
         data_pedido_medico = nil
+        numero_senha = nil
+        prioridade = nil
 
         items.each do |item|
           next unless item.is_a?(Hash)
 
-          # 1. WalkIn ID & link conversa
+          # 1. WalkIn ID, link conversa, senha & prioridade
           walk_in_id ||= item['walk_in_id'] || item['uid'] || item['id']
           link_conversa ||= item['link_conversa'] || item['conversa_url']
+          numero_senha ||= item['numero_senha'] || item['senha'] || item['senha_numero']
+          prioridade ||= item['prioridade'] || item['tipo_atendimento']
 
           # 2. Solicitante / Médico
           sol = item['solicitante'] || item['medico'] || item['doctor']
@@ -274,7 +280,9 @@ module Api
           solicitante_nome: solicitante_nome,
           solicitante_conselho: solicitante_conselho,
           solicitante_especialidade: solicitante_especialidade,
-          data_pedido_medico: data_pedido_medico
+          data_pedido_medico: data_pedido_medico,
+          numero_senha: numero_senha,
+          prioridade: prioridade
         }
       end
     end

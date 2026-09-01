@@ -8,13 +8,21 @@ class Unit < ApplicationRecord
 
   scope :active, -> { where(active: true) }
 
-  def checkin_url(host: nil)
+  def checkin_url(host: nil, origem: 'qrcode')
     base = host || ENV.fetch('APP_HOST', 'check-in.zaikohub.com.br')
-    "https://#{base}/checkin/#{token}"
+    "https://#{base}/checkin/#{token}?origem=#{origem}"
+  end
+
+  def qr_url(host: nil)
+    checkin_url(host: host, origem: 'qrcode')
+  end
+
+  def link_url(host: nil)
+    checkin_url(host: host, origem: 'link')
   end
 
   def qr_svg
-    qr = RQRCode::QRCode.new(checkin_url)
+    qr = RQRCode::QRCode.new(qr_url)
     qr.as_svg(
       offset:           0,
       color:            "000",

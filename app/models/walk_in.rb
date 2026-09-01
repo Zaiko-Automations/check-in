@@ -5,10 +5,22 @@ class WalkIn < ApplicationRecord
   accepts_nested_attributes_for :patient
   accepts_nested_attributes_for :requested_exams, allow_destroy: true
 
-  # Images stored in Cloudflare R2
+  # Images stored in Cloudflare R2 / Disk
+  has_one_attached :foto_senha
   has_one_attached :carteira_convenio
   has_many_attached :requisicoes_medicas
   has_one_attached :documento
+
+  PRIORIDADES = {
+    'geral'            => 'Geral',
+    'preferencial'     => 'Preferencial (60+, Gestante, PCD)',
+    'superprioridade'  => 'Superprioridade (80+ anos)'
+  }.freeze
+
+  ORIGENS = {
+    'qrcode' => 'Presencial (QR Code)',
+    'link'   => 'Remoto (Link / Em Casa)'
+  }.freeze
 
   before_create :generate_uid
 
@@ -26,6 +38,11 @@ class WalkIn < ApplicationRecord
   scope :webhook_sent, -> { where(status: 'webhook_sent') }
   scope :completed,    -> { where(status: 'completed') }
 
+  def foto_senha_url
+    return nil unless foto_senha.attached?
+    Rails.application.routes.url_helpers.rails_blob_url(foto_senha, host: app_host)
+  end
+
   def carteira_convenio_url
     return nil unless carteira_convenio.attached?
     Rails.application.routes.url_helpers.rails_blob_url(carteira_convenio, host: app_host)
@@ -41,6 +58,14 @@ class WalkIn < ApplicationRecord
   def documento_url
     return nil unless documento.attached?
     Rails.application.routes.url_helpers.rails_blob_url(documento, host: app_host)
+  end
+
+  def prioridade_label
+    PRIORIDADES[prioridade] || prioridade.to_s.humanize
+  end
+
+  def origem_label
+    ORIGENS[origem] || origem.to_s.humanize
   end
 
   private

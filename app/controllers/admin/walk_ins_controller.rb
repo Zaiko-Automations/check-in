@@ -55,6 +55,8 @@ module Admin
     def walk_in_params
       params.require(:walk_in).permit(
         :link_conversa,
+        :numero_senha,
+        :prioridade,
         :solicitante_nome,
         :solicitante_conselho,
         :solicitante_especialidade,
