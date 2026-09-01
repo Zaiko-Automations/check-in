@@ -335,16 +335,33 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         STEP 6 — Endereço Residencial
+         STEP 6 — Endereço & Contato
     ═══════════════════════════════════════════════════════════════ -->
     <div class="form-step" id="step-6">
       <div class="step-header">
         <div class="step-icon">🏠</div>
-        <h2 class="step-title">Endereço Residencial</h2>
-        <p class="step-subtitle">Informe seu endereço para cadastro</p>
+        <h2 class="step-title">Endereço & Contato</h2>
+        <p class="step-subtitle">Informe seu endereço e telefone para notificações</p>
       </div>
 
       <div class="form-fields">
+        <!-- Telefone & WhatsApp -->
+        <div class="field-group">
+          <label class="field-label" for="telefone">Telefone / Celular</label>
+          <input class="field-input" type="tel" id="telefone" name="telefone"
+                 placeholder="(00) 00000-0000" inputmode="numeric" maxlength="15"
+                 oninput="mascaraTelefone(this)">
+          <div style="margin-top: 8px;">
+            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #0f172a;">
+              <input type="checkbox" id="whatsapp" name="whatsapp" value="true" checked
+                     style="width: 18px; height: 18px; accent-color: #23c0b5; border-radius: 4px; cursor: pointer;">
+              <span>Este número possui WhatsApp</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: #e2e8f0; margin: 8px 0;"></div>
+
         <!-- CEP com busca automática -->
         <div class="field-row">
           <div class="field-group" style="flex: 1;">
@@ -463,7 +480,7 @@ const stepLabels = {
   3: 'Cobertura',
   4: 'Pedido Médico',
   5: 'Documento (RG/CNH/Certidão)',
-  6: 'Endereço Residencial',
+  6: 'Endereço & Contato',
   7: 'Confirmação'
 };
 
@@ -668,7 +685,23 @@ function removeAllRequisicoes() {
 }
 
 // ────────────────────────────────────────────────────────────────
-// CEP Máscara e Busca automática (ViaCEP)
+// Telefone & CEP Máscaras e Busca automática
+function mascaraTelefone(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.substring(0, 11);
+  if (v.length > 10) {
+    input.value = '(' + v.substring(0, 2) + ') ' + v.substring(2, 7) + '-' + v.substring(7, 11);
+  } else if (v.length > 6) {
+    input.value = '(' + v.substring(0, 2) + ') ' + v.substring(2, 6) + '-' + v.substring(6, 10);
+  } else if (v.length > 2) {
+    input.value = '(' + v.substring(0, 2) + ') ' + v.substring(2);
+  } else if (v.length > 0) {
+    input.value = '(' + v;
+  } else {
+    input.value = '';
+  }
+}
+
 function mascaraCEP(input) {
   let v = input.value.replace(/\D/g, '');
   if (v.length > 5) {
@@ -746,21 +779,30 @@ function buildReview() {
   const docInput = document.getElementById('documento');
   set('review-documento-status', docInput.files.length > 0 ? '🪪 Foto anexada ✅' : '(não enviada)');
 
-  // Endereço review
+  // Endereço & Contato review
+  const tel = val('telefone');
+  const isWhats = document.getElementById('whatsapp')?.checked;
   const rua = val('logradouro');
   const num = val('numero');
   const bairro = val('bairro');
   const cid = val('cidade');
   const uf = val('uf');
   const cardEnd = document.getElementById('review-card-endereco');
-  if (rua || cid) {
+  
+  if (tel || rua || cid) {
     cardEnd.style.display = 'block';
+    let linhas = [];
+    if (tel) {
+      linhas.push(`📱 ${tel}${isWhats ? ' (WhatsApp ✅)' : ''}`);
+    }
     const endCompleto = [
       rua && (num ? `${rua}, ${num}` : rua),
       bairro,
       cid && (uf ? `${cid}/${uf}` : cid)
     ].filter(Boolean).join(' - ');
-    set('review-endereco-texto', endCompleto || '—');
+    if (endCompleto) linhas.push(`📍 ${endCompleto}`);
+
+    set('review-endereco-texto', linhas.join(' | ') || '—');
   } else {
     cardEnd.style.display = 'none';
   }
