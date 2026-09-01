@@ -55,6 +55,10 @@ module Admin
     def walk_in_params
       params.require(:walk_in).permit(
         :link_conversa,
+        :solicitante_nome,
+        :solicitante_conselho,
+        :solicitante_especialidade,
+        :data_pedido_medico,
         patient_attributes: [
           :id, :nome, :cpf, :data_nascimento, :sexo_biologico,
           :telefone, :whatsapp, :cidade_atendimento,

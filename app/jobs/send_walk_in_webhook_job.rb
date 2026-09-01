@@ -96,6 +96,13 @@ class SendWalkInWebhookJob < ApplicationJob
 
       cobertura: cobertura,
 
+      solicitante: {
+        nome:               walk_in.respond_to?(:solicitante_nome) ? walk_in.solicitante_nome : nil,
+        conselho:           walk_in.respond_to?(:solicitante_conselho) ? walk_in.solicitante_conselho : nil,
+        especialidade:      walk_in.respond_to?(:solicitante_especialidade) ? walk_in.solicitante_especialidade : nil,
+        data_pedido_medico: walk_in.respond_to?(:data_pedido_medico) ? walk_in.data_pedido_medico&.strftime('%Y-%m-%d') : nil
+      },
+
       exams: walk_in.requested_exams.map { |e| { codigo: e.codigo, descricao: e.descricao, acuracia: e.acuracia } },
 
       documents: {

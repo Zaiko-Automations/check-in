@@ -35,19 +35,25 @@ module Api
         ActiveRecord::Base.transaction do
           # 1. Update Patient details
           if extracted[:patient_attrs].present?
-            # Clean up attributes before updating
             clean_patient_attrs = extracted[:patient_attrs].compact_blank
-            # Only update if there are attributes
             if clean_patient_attrs.present?
               @patient.assign_attributes(clean_patient_attrs)
-              @patient.save!(validate: false) # validate false to prevent blocking on partial AI extractions
+              @patient.save!(validate: false)
             end
           end
 
-          # 2. Update WalkIn status back to pending so it appears ready for validation
+          # 2. Update WalkIn attributes (solicitante, data_pedido_medico, link_conversa, status)
           walk_in_updates = { status: 'pending' }
           walk_in_updates[:link_conversa] = extracted[:link_conversa] if extracted[:link_conversa].present?
-          @walk_in.update_columns(walk_in_updates)
+          walk_in_updates[:solicitante_nome] = extracted[:solicitante_nome] if extracted[:solicitante_nome].present?
+          walk_in_updates[:solicitante_conselho] = extracted[:solicitante_conselho] if extracted[:solicitante_conselho].present?
+          walk_in_updates[:solicitante_especialidade] = extracted[:solicitante_especialidade] if extracted[:solicitante_especialidade].present?
+          walk_in_updates[:data_pedido_medico] = extracted[:data_pedido_medico] if extracted[:data_pedido_medico].present?
+
+          # Filter only existing columns in walk_ins table to be 100% migration-safe
+          valid_columns = WalkIn.column_names
+          safe_updates = walk_in_updates.select { |k, _| valid_columns.include?(k.to_s) }
+          @walk_in.update_columns(safe_updates)
 
           # 3. Save / Recreate exams list
           if extracted[:exams].present?
@@ -63,11 +69,14 @@ module Api
           end
         end
 
+        Rails.logger.info "[Api::V1::WalkInsController Callback Success] WalkIn #{@walk_in.uid} atualizado com #{@walk_in.requested_exams.count} exames."
+
         render json: {
           message: "Walk-in atualizado com sucesso!",
           walk_in_id: @walk_in.uid,
           status: @walk_in.status,
           paciente: @patient.nome,
+          solicitante: @walk_in.respond_to?(:solicitante_nome) ? @walk_in.solicitante_nome : nil,
           exames_total: @walk_in.requested_exams.count
         }, status: :ok
       rescue => e
@@ -100,6 +109,10 @@ module Api
         patient_attrs = {}
         exams = []
         link_conversa = nil
+        solicitante_nome = nil
+        solicitante_conselho = nil
+        solicitante_especialidade = nil
+        data_pedido_medico = nil
 
         items.each do |item|
           next unless item.is_a?(Hash)
@@ -108,7 +121,21 @@ module Api
           walk_in_id ||= item['walk_in_id'] || item['uid'] || item['id']
           link_conversa ||= item['link_conversa'] || item['conversa_url']
 
-          # 2. Root level fields
+          # 2. Solicitante / Médico
+          sol = item['solicitante'] || item['medico'] || item['doctor']
+          if sol.is_a?(Hash)
+            solicitante_nome ||= sol['nome'] || sol['name'] || sol['medico']
+            solicitante_conselho ||= sol['numero_conselho'] || sol['conselho'] || sol['crm']
+            solicitante_especialidade ||= sol['especialidade'] || sol['specialty']
+          end
+          solicitante_nome ||= item['solicitante_nome']
+          solicitante_conselho ||= item['solicitante_conselho']
+          solicitante_especialidade ||= item['solicitante_especialidade']
+
+          # Data pedido médico
+          data_pedido_medico ||= item['data_pedido_medico']
+
+          # 3. Root level fields
           if is_present?(item['cidade_atendimento'])
             patient_attrs[:cidade_atendimento] ||= item['cidade_atendimento']
           end
@@ -116,9 +143,10 @@ module Api
             patient_attrs[:cobertura_tipo] ||= item['cobertura_tipo'] || item['tipo']
           end
 
-          # 3. Paciente / Patient object
+          # 4. Paciente / Patient object
           paciente = item['paciente'] || item['patient']
           if paciente.is_a?(Hash)
+            data_pedido_medico ||= paciente['data_pedido_medico']
             paciente.each do |k, v|
               next unless is_present?(v)
               case k.to_s
@@ -152,7 +180,7 @@ module Api
             end
           end
 
-          # 4. Check for nested markdown JSON in content.parts (Gemini LLM direct response)
+          # 5. Nested markdown JSON in content.parts (Gemini LLM direct response)
           parts = item.dig('content', 'parts')
           if parts.is_a?(Array)
             parts.each do |part|
@@ -164,6 +192,11 @@ module Api
                   gemini_data = JSON.parse($1)
                   dados = gemini_data['dados'] || gemini_data
                   if dados.is_a?(Hash)
+                    data_pedido_medico ||= dados['data_pedido_medico']
+                    solicitante_nome ||= dados['solicitante_nome']
+                    solicitante_conselho ||= dados['solicitante_conselho']
+                    solicitante_especialidade ||= dados['solicitante_especialidade']
+
                     dados.each do |k, v|
                       next unless is_present?(v)
                       case k.to_s
@@ -185,7 +218,7 @@ module Api
             end
           end
 
-          # 5. Exames at root level
+          # 6. Exames at root level
           raw_exams = item['exames_solicitados'] || item['exams']
           if raw_exams.is_a?(Array)
             raw_exams.each do |ex|
@@ -201,12 +234,17 @@ module Api
             end
           end
 
-          # 6. Requisicoes medicas (multiple pages)
+          # 7. Requisicoes medicas (multiple pages)
           reqs = item['requisicoes_medicas']
           if reqs.is_a?(Array)
             reqs.compact.each do |req|
               next unless req.is_a?(Hash)
               dados = req['dados'] || req
+              solicitante_nome ||= dados['solicitante_nome']
+              solicitante_conselho ||= dados['solicitante_conselho']
+              solicitante_especialidade ||= dados['solicitante_especialidade']
+              data_pedido_medico ||= dados['data_pedido_medico']
+
               nested_exams = dados['exames_solicitados']
               if nested_exams.is_a?(Array)
                 nested_exams.each do |ex|
@@ -232,7 +270,11 @@ module Api
           walk_in_id: walk_in_id,
           patient_attrs: patient_attrs,
           exams: unique_exams,
-          link_conversa: link_conversa
+          link_conversa: link_conversa,
+          solicitante_nome: solicitante_nome,
+          solicitante_conselho: solicitante_conselho,
+          solicitante_especialidade: solicitante_especialidade,
+          data_pedido_medico: data_pedido_medico
         }
       end
     end
