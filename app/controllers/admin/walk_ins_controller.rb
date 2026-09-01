@@ -41,6 +41,18 @@ module Admin
       redirect_to admin_root_path, notice: "Check-in removido com sucesso."
     end
 
+    def bulk_destroy
+      ids = params[:walk_in_ids]
+      if ids.present?
+        scope = WalkIn.where(id: ids)
+        scope = scope.where(unit_id: current_user.unit_id) if current_user.unit_id.present?
+        deleted_count = scope.destroy_all.size
+        redirect_to admin_root_path, notice: "#{deleted_count} check-in(s) excluído(s) com sucesso."
+      else
+        redirect_to admin_root_path, alert: "Nenhum check-in selecionado para exclusão."
+      end
+    end
+
     private
 
     def set_walk_in

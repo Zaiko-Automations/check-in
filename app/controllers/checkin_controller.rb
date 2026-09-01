@@ -25,7 +25,7 @@ class CheckinController < ApplicationController
       # Build patient record and default city
       patient_data = patient_params
       patient_data[:cidade_atendimento] = @unit.city if patient_data[:cidade_atendimento].blank?
-      patient_data[:nome] = "Aguardando Leitura (IA)" if patient_data[:nome].blank?
+      patient_data[:nome] = "Aguardando Leitura" if patient_data[:nome].blank?
       patient_data[:cpf] = "—" if patient_data[:cpf].blank?
       patient_data[:cobertura_tipo] = "particular" if patient_data[:cobertura_tipo].blank?
 

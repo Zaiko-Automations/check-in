@@ -12,11 +12,18 @@
     <div class="flex items-center gap-3 mt-1 flex-wrap">
       <h2 class="text-2xl font-bold text-slate-900 font-heading">Revisão de Dados</h2>
       <% if @walk_in.numero_senha.present? %>
-        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-900 text-white font-mono shadow-sm">
-          🎟️ Senha: <%= @walk_in.numero_senha %>
+        <%
+          badge_bg = case @walk_in.prioridade
+                     when 'superprioridade' then 'bg-blue-600 text-white'
+                     when 'preferencial'     then 'bg-amber-500 text-white'
+                     else                         'bg-emerald-600 text-white'
+                     end
+        %>
+        <span class="px-3 py-1 text-xs font-bold rounded-lg font-mono shadow-sm <%= badge_bg %>">
+          Senha <%= @walk_in.numero_senha %>
         </span>
       <% end %>
-      <span class="px-2.5 py-1 text-xs font-bold rounded-full <%= @walk_in.prioridade == 'superprioridade' ? 'bg-blue-100 text-blue-800 border border-blue-200' : (@walk_in.prioridade == 'preferencial' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-700') %>">
+      <span class="px-2.5 py-1 text-xs font-bold rounded-full <%= @walk_in.prioridade == 'superprioridade' ? 'bg-blue-50 text-blue-700 border border-blue-200' : (@walk_in.prioridade == 'preferencial' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700') %>">
         <%= @walk_in.prioridade_label %>
       </span>
       <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-500">
@@ -25,7 +32,7 @@
       <% if @walk_in.pending? %>
         <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Aguardando Validação</span>
       <% elsif @walk_in.webhook_sent? %>
-        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Enviado ao n8n</span>
+        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Em Processamento</span>
       <% else %>
         <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Concluído</span>
       <% end %>

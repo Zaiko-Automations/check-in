@@ -20,6 +20,10 @@ Rails.application.routes.draw do
       member do
         patch :complete
       end
+      collection do
+        delete :bulk_destroy
+        post   :bulk_destroy
+      end
     end
     # Configurações de webhook e identidade do laboratório
     resource :settings, only: [:edit, :update]

@@ -37,7 +37,7 @@
 
     <%= link_to admin_root_path(status: 'webhook_sent', search: params[:search]), 
                 class: "px-5 py-3 text-sm font-bold border-b-2 transition-all #{@status == 'webhook_sent' ? 'border-secondary text-secondary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300'}" do %>
-      Processando n8n
+      Processando
       <span class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-600">
         <%= @counts[:webhook_sent] %>
       </span>
@@ -52,124 +52,188 @@
     <% end %>
   </div>
 
-  <!-- Table -->
+  <!-- Table & Bulk Form -->
   <% if @walk_ins.any? %>
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-100">
-          <thead class="bg-slate-50/50">
-            <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Senha / Tipo</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Paciente</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cobertura</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade / Unidade</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Data</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Link Conversa</th>
-              <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 bg-white">
-            <% @walk_ins.each do |w| %>
-              <tr class="hover:bg-slate-50/50 transition-colors">
-                <!-- Senha & Prioridade -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex flex-col gap-1">
-                    <% if w.numero_senha.present? %>
-                      <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-900 text-white font-mono text-sm font-bold rounded-lg shadow-sm w-max">
-                        🎟️ <%= w.numero_senha %>
-                      </span>
-                    <% else %>
-                      <span class="text-xs text-slate-400 font-mono">#<%= w.id %></span>
-                    <% end %>
+    <%= form_tag bulk_destroy_admin_walk_ins_path, method: :delete, id: "bulk-delete-form" do %>
+      
+      <!-- Floating Bulk Action Bar -->
+      <div id="bulk-action-bar" style="display: none;" class="mb-4 p-3 bg-slate-900 text-white rounded-xl shadow-lg flex items-center justify-between animate-fade-in">
+        <div class="flex items-center gap-3 pl-2">
+          <span class="text-sm font-bold" id="bulk-selected-count">0 selecionados</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="cancelSelection()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" onclick="return confirm('Tem certeza que deseja excluir os pedidos selecionados?');" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            <span>Excluir Selecionados</span>
+          </button>
+        </div>
+      </div>
 
-                    <div class="flex items-center gap-1">
-                      <% if w.prioridade == 'superprioridade' %>
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">🔵 Super 80+</span>
-                      <% elsif w.prioridade == 'preferencial' %>
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">🟡 Preferencial</span>
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50/50">
+              <tr>
+                <th scope="col" class="w-12 px-4 py-4 text-center">
+                  <input type="checkbox" id="select-all" class="w-4 h-4 rounded text-secondary focus:ring-secondary cursor-pointer" onclick="toggleSelectAll(this)">
+                </th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Senha / Tipo</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Paciente</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cobertura</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade / Unidade</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Data</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Link Conversa</th>
+                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              <% @walk_ins.each do |w| %>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <!-- Checkbox Selection -->
+                  <td class="w-12 px-4 py-4 text-center">
+                    <input type="checkbox" name="walk_in_ids[]" value="<%= w.id %>" class="walkin-checkbox w-4 h-4 rounded text-secondary focus:ring-secondary cursor-pointer" onchange="updateBulkBar()">
+                  </td>
+
+                  <!-- Senha & Prioridade -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex flex-col gap-1">
+                      <%
+                        badge_bg = case w.prioridade
+                                   when 'superprioridade' then 'bg-blue-600 text-white'
+                                   when 'preferencial'     then 'bg-amber-500 text-white'
+                                   else                         'bg-emerald-600 text-white'
+                                   end
+                      %>
+                      <% if w.numero_senha.present? %>
+                        <span class="inline-flex items-center px-2.5 py-1 font-mono text-sm font-bold rounded-lg shadow-sm w-max <%= badge_bg %>">
+                          <%= w.numero_senha %>
+                        </span>
                       <% else %>
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">🟢 Geral</span>
-                      <% end %>
-                      <% if w.origem == 'link' %>
-                        <span class="text-[10px] text-slate-400 font-semibold" title="Remoto (Link / Em Casa)">🏠</span>
-                      <% else %>
-                        <span class="text-[10px] text-slate-400 font-semibold" title="Presencial (QR Code)">📱</span>
-                      <% end %>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Patient Name & CPF -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm tracking-tight shrink-0 uppercase">
-                      <%= w.patient.nome.to_s.split.map(&:first).join.first(2).upcase %>
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="text-sm font-bold text-slate-800 uppercase"><%= w.patient.nome %></span>
-                      <span class="text-xs text-slate-500 mt-0.5">CPF: <%= w.patient.cpf %></span>
-                      <% if w.status == 'failed' %>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded bg-red-50 text-red-700 border border-red-100 text-[10px] font-bold w-max" title="<%= w.webhook_error %>">
-                          ⚠️ Erro no Webhook
+                        <span class="inline-flex items-center px-2 py-0.5 font-mono text-xs font-semibold rounded-md bg-slate-100 text-slate-500 w-max">
+                          #<%= w.id %>
                         </span>
                       <% end %>
+
+                      <div class="flex items-center gap-1">
+                        <% if w.prioridade == 'superprioridade' %>
+                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Super 80+</span>
+                        <% elsif w.prioridade == 'preferencial' %>
+                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Preferencial</span>
+                        <% else %>
+                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Geral</span>
+                        <% end %>
+                        <% if w.origem == 'link' %>
+                          <span class="text-[10px] text-slate-400 font-semibold" title="Remoto (Link / Em Casa)">🏠</span>
+                        <% else %>
+                          <span class="text-[10px] text-slate-400 font-semibold" title="Presencial (QR Code)">📱</span>
+                        <% end %>
+                      </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
+                  
+                  <!-- Patient Name & CPF -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm tracking-tight shrink-0 uppercase">
+                        <%= w.patient.nome.to_s.split.map(&:first).join.first(2).upcase %>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-800 uppercase"><%= w.patient.nome %></span>
+                        <span class="text-xs text-slate-500 mt-0.5">CPF: <%= w.patient.cpf %></span>
+                        <% if w.status == 'failed' %>
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded bg-red-50 text-red-700 border border-red-100 text-[10px] font-bold w-max" title="<%= w.webhook_error %>">
+                            ⚠️ Erro no Webhook
+                          </span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
 
-                <!-- Cobertura / Tipo de Pedido -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <% if w.patient.particular? %>
-                    <span class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm">Particular</span>
-                  <% else %>
-                    <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"><%= w.patient.convenio %></span>
-                  <% end %>
-                </td>
-
-                <!-- Cidade & Unidade -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                  <div><%= w.patient.cidade_atendimento.presence || w.unit.city.presence || "(não informada)" %></div>
-                  <div class="text-[11px] text-slate-400"><%= w.unit.name %></div>
-                </td>
-
-                <!-- Data -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                  <%= w.created_at.strftime('%d/%m/%Y, %H:%M') %>
-                </td>
-
-                <!-- Link Conversa -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <% if w.link_conversa.present? %>
-                    <%= link_to w.link_conversa, target: "_blank", class: "inline-flex items-center justify-center px-4 py-2 bg-[#002b47] hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm gap-2" do %>
-                      💬 Conversa
+                  <!-- Cobertura / Tipo de Pedido -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <% if w.patient.particular? %>
+                      <span class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm">Particular</span>
+                    <% else %>
+                      <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm"><%= w.patient.convenio %></span>
                     <% end %>
-                  <% else %>
-                    <span class="text-xs text-slate-400 font-mono">Sem link</span>
-                  <% end %>
-                </td>
+                  </td>
 
-                <!-- Conferência button -->
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="flex items-center justify-end gap-2">
+                  <!-- Cidade & Unidade -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                    <div><%= w.patient.cidade_atendimento.presence || w.unit.city.presence || "(não informada)" %></div>
+                    <div class="text-[11px] text-slate-400"><%= w.unit.name %></div>
+                  </td>
+
+                  <!-- Data -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    <%= w.created_at.strftime('%d/%m/%Y, %H:%M') %>
+                  </td>
+
+                  <!-- Link Conversa -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <% if w.link_conversa.present? %>
+                      <%= link_to w.link_conversa, target: "_blank", class: "inline-flex items-center justify-center px-4 py-2 bg-[#002b47] hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm gap-2" do %>
+                        💬 Conversa
+                      <% end %>
+                    <% else %>
+                      <span class="text-xs text-slate-400 font-mono">Sem link</span>
+                    <% end %>
+                  </td>
+
+                  <!-- Conferência button -->
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <%= link_to admin_walk_in_path(w), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-lg text-xs font-bold hover:bg-secondary-hover transition-colors shadow-sm" do %>
                       🔍 Conferir
                     <% end %>
-                    <% if w.pending? %>
-                      <%= button_to admin_walk_in_path(w), method: :delete, data: { confirm: 'Tem certeza que deseja excluir?' }, class: "p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer" do %>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      <% end %>
-                    <% end %>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    <% end %>
   <% else %>
     <div class="bg-white rounded-2xl border border-slate-200 py-16 px-6 text-center shadow-sm">
       <p class="text-slate-500 font-medium">Nenhum paciente nesta fila no momento.</p>
     </div>
   <% end %>
 </div>
+
+<script>
+function toggleSelectAll(master) {
+  const checkboxes = document.querySelectorAll('.walkin-checkbox');
+  checkboxes.forEach(cb => cb.checked = master.checked);
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const checkboxes = document.querySelectorAll('.walkin-checkbox:checked');
+  const bar = document.getElementById('bulk-action-bar');
+  const countEl = document.getElementById('bulk-selected-count');
+  const master = document.getElementById('select-all');
+
+  const count = checkboxes.length;
+  if (count > 0) {
+    bar.style.display = 'flex';
+    countEl.textContent = `${count} ${count === 1 ? 'pedido selecionado' : 'pedidos selecionados'}`;
+  } else {
+    bar.style.display = 'none';
+  }
+
+  const allCheckboxes = document.querySelectorAll('.walkin-checkbox');
+  if (master) {
+    master.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+  }
+}
+
+function cancelSelection() {
+  document.querySelectorAll('.walkin-checkbox').forEach(cb => cb.checked = false);
+  const master = document.getElementById('select-all');
+  if (master) master.checked = false;
+  updateBulkBar();
+}
+</script>
