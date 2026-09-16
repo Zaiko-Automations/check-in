@@ -9,10 +9,13 @@ module Api
                     begin
                       JSON.parse(raw_body)
                     rescue JSON::ParserError
-                      params.to_unsafe_h
+                      Rails.logger.warn("[Api::V1::WalkInsController] JSON inválido no payload")
+                      render json: { error: "Payload JSON inválido" }, status: :bad_request
+                      return
                     end
                   else
-                    params.to_unsafe_h
+                    render json: { error: "Body vazio" }, status: :bad_request
+                    return
                   end
 
         extracted = parse_payload(payload, params[:id])
@@ -38,7 +41,7 @@ module Api
             clean_patient_attrs = extracted[:patient_attrs].compact_blank
             if clean_patient_attrs.present?
               @patient.assign_attributes(clean_patient_attrs)
-              @patient.save!(validate: false)
+              @patient.save!
             end
           end
 
@@ -90,12 +93,17 @@ module Api
 
       def authenticate_token!
         token = request.headers['X-API-Token'] ||
-                request.headers['Authorization']&.split(' ')&.last ||
-                params[:token]
-        expected_token = ENV['WEBHOOK_API_TOKEN'] || 'vida_lucas_secret_token_2026'
+                request.headers['Authorization']&.split(' ')&.last
 
-        if token.blank? || token != expected_token
-          Rails.logger.warn("[Api::V1::WalkInsController] Token inválido ou ausente: #{token.inspect}")
+        expected_token = ENV['WEBHOOK_API_TOKEN']
+        if expected_token.blank?
+          Rails.logger.error("[Api::V1::WalkInsController] WEBHOOK_API_TOKEN não configurado!")
+          render json: { error: 'Server misconfiguration' }, status: :internal_server_error
+          return
+        end
+
+        if token.blank? || !ActiveSupport::SecurityUtils.secure_compare(token, expected_token)
+          Rails.logger.warn("[Api::V1::WalkInsController] Token inválido ou ausente")
           render json: { error: 'Unauthorized: Invalid or missing token' }, status: :unauthorized
         end
       end

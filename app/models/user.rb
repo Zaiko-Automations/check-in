@@ -5,8 +5,9 @@ class User < ApplicationRecord
   enum role: { admin: 'admin', attendant: 'attendant' }, _default: 'attendant'
 
   # Include default devise modules.
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+  devise :database_authenticatable,
+         :recoverable, :rememberable, :validatable,
+         :lockable, :timeoutable
 
   # Guard: attendants cannot be assigned no unit (optional) but admins always have full access
   def admin?
