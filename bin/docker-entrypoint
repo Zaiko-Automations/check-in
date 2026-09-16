@@ -16,6 +16,10 @@ if [ -n "$DATABASE_URL" ]; then
     sleep 2
   done
   echo "PostgreSQL pronto!"
+
+  # Executa migrações pendentes automaticamente no boot
+  echo "Executando migrações pendentes no banco de dados..."
+  bin/rails db:migrate || echo "Aviso: migração falhou ou já executada"
 fi
 
 exec "$@"
