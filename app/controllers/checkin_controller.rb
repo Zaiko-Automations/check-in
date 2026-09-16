@@ -60,6 +60,10 @@ class CheckinController < ApplicationController
   rescue ActiveRecord::RecordInvalid => e
     flash.now[:alert] = e.record.errors.full_messages.to_sentence
     render :show, status: :unprocessable_entity
+  rescue => e
+    Rails.logger.error("[CheckinController#create Error] #{e.class}: #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}")
+    flash.now[:alert] = "Não foi possível concluir o check-in: #{e.message}"
+    render :show, status: :unprocessable_entity
   end
 
   def success
