@@ -101,53 +101,28 @@
     <div class="form-step" id="step-2">
       <div class="step-header">
         <div class="step-icon">🎟️</div>
-        <h2 class="step-title">Sua Senha</h2>
-        <p class="step-subtitle">Digite sua senha ou tire uma foto do papel impresso</p>
+        <h2 class="step-title">Senha de Atendimento</h2>
       </div>
 
       <div class="form-fields">
-        <!-- Digitar Senha -->
-        <div class="field-group">
-          <label class="field-label" for="numero_senha">Número da Senha</label>
+        <div class="field-group" style="margin-bottom: 8px;">
           <input class="field-input" type="text" id="numero_senha" name="numero_senha"
-                 placeholder="Ex: G-042 ou P-015" autocomplete="off"
-                 style="font-size: 18px; font-weight: 700; text-align: center; letter-spacing: 0.05em; text-transform: uppercase;">
-          <p class="field-hint" style="font-size: 12px; color: #64748b; margin-top: 4px; text-align: center;">
-            Digite o código impresso no papel do totem
-          </p>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 12px; margin: 16px 0;">
-          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-          <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">ou</span>
-          <div style="flex: 1; height: 1px; background: #e2e8f0;"></div>
-        </div>
-
-        <!-- Foto da Senha -->
-        <div class="upload-area" id="upload-senha">
-          <input type="file" id="foto_senha" name="foto_senha"
-                 accept="image/*" class="upload-input"
-                 onchange="previewImage(this, 'preview-senha')">
-          <label for="foto_senha" class="upload-label">
-            <div class="upload-icon">📷</div>
-            <p class="upload-title">Tirar Foto do Papel da Senha</p>
-            <p class="upload-hint">O número da senha será identificado automaticamente</p>
-          </label>
-          <div class="upload-preview" id="preview-senha" style="display: none;">
-            <img id="preview-senha-img" src="" alt="Preview da senha">
-            <button type="button" class="preview-remove" onclick="removeImage('foto_senha', 'preview-senha')">✕ Remover</button>
-          </div>
+                 placeholder="" autocomplete="off"
+                 style="font-size: 24px; font-weight: 800; text-align: center; letter-spacing: 0.08em; text-transform: uppercase; padding: 18px; border-radius: 16px;">
         </div>
       </div>
 
       <div class="step-nav">
         <button type="button" class="btn-back" onclick="prevStep(2)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Voltar
+        </button>
+        <button type="button" class="btn-skip" onclick="skipSenhaStep()">
+          Pular
         </button>
         <button type="button" class="btn-next" onclick="nextStep(2)">
           Próximo
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
@@ -474,7 +449,7 @@ const totalSteps = 7;
 
 const stepLabels = {
   1: 'Tipo de Atendimento',
-  2: 'Senha do Totem',
+  2: 'Senha de Atendimento',
   3: 'Cobertura',
   4: 'Pedido Médico',
   5: 'Documento (RG/CNH/Certidão)',
@@ -538,6 +513,12 @@ function nextStep(current) {
   if (current >= totalSteps) return;
   currentStep = current + 1;
   showStep(currentStep);
+}
+
+function skipSenhaStep() {
+  const senhaInput = document.getElementById('numero_senha');
+  if (senhaInput) senhaInput.value = '';
+  nextStep(2);
 }
 
 function prevStep(current) {

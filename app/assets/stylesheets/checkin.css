@@ -393,24 +393,25 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
 
 /* ── Buttons ── */
 .btn-next, .btn-submit {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 16px;
-  margin-top: 24px;
+  height: 52px;
+  padding: 0 20px;
   background: linear-gradient(135deg, #23c0b5, #1aa99f);
   color: #002b47;
   border: none;
   border-radius: var(--radius-lg);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   font-family: var(--font);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 16px rgba(35,192,181,.35);
   letter-spacing: -0.2px;
+  box-sizing: border-box;
 }
 
 .btn-next:active, .btn-submit:active {
@@ -424,30 +425,67 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
 }
 
 .step-nav {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-top: 24px;
+  width: 100%;
 }
 
 .btn-back {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 16px 20px;
-  background: transparent;
+  height: 52px;
+  padding: 0 18px;
+  background: #ffffff;
   color: var(--text-secondary);
   border: 2px solid var(--border);
   border-radius: var(--radius-lg);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   font-family: var(--font);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-sizing: border-box;
+  flex: 0 0 auto;
 }
 
 .btn-back:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-skip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 16px;
+  background: #f8fafc;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.btn-skip:hover {
+  background: #e2e8f0;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.step-nav .btn-next,
+.step-nav .btn-submit {
+  margin-top: 0;
+  flex: 1 1 auto;
+}
 
 /* ── Review Card ── */
 .review-card {
