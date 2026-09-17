@@ -1,8 +1,7 @@
 <% content_for :page_title, "Configurações" %>
 
-<div class="page-header" style="margin-bottom: 32px;">
-  <h1 class="page-title">⚙️ Configurações</h1>
-  <p class="page-subtitle">Configure a integração do Check-in Expresso com seu sistema</p>
+<div class="page-header" style="margin-bottom: 24px;">
+  <p class="page-subtitle" style="font-size: 0.9rem; color: #64748b; margin: 0;">Configure a integração do Check-in Expresso com seu sistema</p>
 </div>
 
 <% if notice %>
@@ -32,9 +31,6 @@
             value="<%= @lab_name %>"
             placeholder="Ex: Laboratório Centro"
           >
-          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
-            Aparece no cabeçalho do painel e nos dados enviados ao webhook.
-          </small>
         </div>
       </div>
     </div>
@@ -58,9 +54,6 @@
             value="<%= @webhook_url %>"
             placeholder="https://n8n.suaempresa.com.br/webhook/checkin"
           >
-          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
-            Para onde os dados do check-in serão enviados (n8n, Make, Zapier, etc). Deixe vazio para desativar o envio.
-          </small>
         </div>
 
         <div class="form-group">
@@ -77,24 +70,8 @@
             placeholder="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             autocomplete="off"
           >
-          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
-            Enviado como cabeçalho <code>Authorization</code>. Suporta Bearer token ou qualquer outro valor.
-          </small>
         </div>
 
-        <%# Status atual do webhook %>
-        <div style="background: rgba(0,43,71,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px;">
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 8px;">Status atual da integração:</p>
-          <% if @webhook_url.present? %>
-            <span style="display: inline-flex; align-items: center; gap: 8px; color: #23c0b5; font-size: 0.9rem; font-weight: 500;">
-              ✅ Webhook configurado → <code style="font-size: 0.8rem; opacity: 0.8;"><%= @webhook_url.truncate(60) %></code>
-            </span>
-          <% else %>
-            <span style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9rem;">
-              ⚠️ Nenhum webhook configurado — os dados do check-in não serão enviados automaticamente.
-            </span>
-          <% end %>
-        </div>
       </div>
     </div>
 

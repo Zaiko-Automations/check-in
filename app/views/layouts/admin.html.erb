@@ -100,11 +100,6 @@
             <% else %>
               <span class="text-[9px] px-1.5 py-0.5 bg-slate-200 text-slate-600 font-bold rounded uppercase tracking-wide">Atendente</span>
             <% end %>
-            <% if current_user&.unit %>
-              <span class="text-[10px] text-secondary font-medium truncate"><%= current_user.unit.name %></span>
-            <% else %>
-              <span class="text-[10px] text-slate-400 font-medium truncate">Acesso Geral</span>
-            <% end %>
           </div>
         </div>
         <%= button_to destroy_user_session_path, method: :delete, class: "p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 cursor-pointer" do %>
