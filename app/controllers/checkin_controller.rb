@@ -53,7 +53,12 @@ class CheckinController < ApplicationController
       end
     end
 
-    SendWalkInWebhookJob.perform_later(@walk_in.id, 'extraction')
+    if AppSetting.conference_enabled?
+      SendWalkInWebhookJob.perform_later(@walk_in.id, 'extraction')
+    else
+      @walk_in.update_column(:status, 'completed')
+      SendWalkInWebhookJob.perform_later(@walk_in.id, 'final')
+    end
 
     redirect_to checkin_success_path(token: @unit.token, walk_in_id: @walk_in.uid, senha: @walk_in.numero_senha), notice: "Check-in confirmado com sucesso!"
 

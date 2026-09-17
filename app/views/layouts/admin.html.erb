@@ -73,7 +73,7 @@
     <!-- Navigation -->
     <nav class="flex-grow p-4 space-y-1">
       <a href="<%= admin_root_path %>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all <%= controller_name == 'dashboard' || controller_name == 'walk_ins' ? 'bg-secondary/10 text-secondary font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
-        <span>📋</span> Fila de Pedidos
+        <span>📋</span> <%= AppSetting.conference_enabled? ? "Fila de Pedidos" : "Check-ins" %>
       </a>
 
       <% if current_user&.admin? %>

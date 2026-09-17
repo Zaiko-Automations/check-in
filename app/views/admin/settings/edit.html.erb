@@ -75,6 +75,36 @@
       </div>
     </div>
 
+    <%# ── MODO DE CONFERÊNCIA ────────────────────── %>
+    <div class="card">
+      <div class="card-header">
+        <h2 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0;">
+          🔄 Fluxo de Atendimento e Conferência
+        </h2>
+      </div>
+      <div class="card-body" style="padding: 24px; display: grid; gap: 16px;">
+        <label style="display: flex; items-center; gap: 12px; cursor: pointer; user-select: none;">
+          <input type="hidden" name="enable_conference" value="0">
+          <input
+            type="checkbox"
+            name="enable_conference"
+            value="1"
+            <%= "checked" if @enable_conference %>
+            style="width: 20px; height: 20px; accent-color: #23c0b5; cursor: pointer; margin-top: 2px;"
+          >
+          <div>
+            <div style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">
+              Ativar Tela / Fila de Conferência Manual
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0; line-height: 1.4;">
+              <strong>Marcado (Padrão):</strong> Os check-ins recebidos são enviados para extração e ficam na fila de conferência para validação manual dos atendentes antes de despachar ao LIS.<br>
+              <strong>Desmarcado (Envio Direto):</strong> Ao finalizar o check-in, os dados são enviados imediatamente para o Webhook final cadastrado acima, sem reter na fila de conferência.
+            </p>
+          </div>
+        </label>
+      </div>
+    </div>
+
     <%# ── AÇÕES ───────────────────────────────────── %>
     <div style="display: flex; justify-content: flex-end;">
       <button type="submit" class="btn btn-primary" style="padding: 14px 32px; font-size: 1rem;">

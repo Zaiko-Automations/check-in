@@ -4,8 +4,12 @@
   <!-- Page Header -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
     <div>
-      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">Fila de Revisão de Pedidos</h2>
-      <p class="text-sm text-slate-500 mt-1">Conferência e validação de check-ins recebidos.</p>
+      <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-heading">
+        <%= AppSetting.conference_enabled? ? "Fila de Revisão de Pedidos" : "Histórico de Check-ins" %>
+      </h2>
+      <p class="text-sm text-slate-500 mt-1">
+        <%= AppSetting.conference_enabled? ? "Conferência e validação de check-ins recebidos." : "Acompanhamento e registro de check-ins enviados ao sistema." %>
+      </p>
     </div>
     
     <!-- Search -->
@@ -24,6 +28,18 @@
       <% end %>
     </div>
   </div>
+
+  <% unless AppSetting.conference_enabled? %>
+    <div class="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between text-blue-800 text-sm">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">⚡</span>
+        <span><strong>Modo de Envio Direto Ativo:</strong> Novos check-ins são enviados diretamente para o Webhook/LIS configurado, sem retenção na fila pendente.</span>
+      </div>
+      <% if current_user&.admin? %>
+        <%= link_to "Alterar em Configurações", edit_admin_settings_path, class: "text-xs font-bold text-blue-700 hover:underline ml-4 whitespace-nowrap" %>
+      <% end %>
+    </div>
+  <% end %>
 
   <!-- Status Tabs -->
   <div class="flex border-b border-slate-200 mb-6 gap-2">
@@ -85,8 +101,9 @@
                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cobertura</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Cidade / Unidade</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Data</th>
-                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Link Conversa</th>
-                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
+                <% if AppSetting.conference_enabled? %>
+                  <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Conferência</th>
+                <% end %>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
@@ -124,11 +141,6 @@
                           <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Preferencial</span>
                         <% else %>
                           <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Geral</span>
-                        <% end %>
-                        <% if w.origem == 'link' %>
-                          <span class="text-[10px] text-slate-400 font-semibold" title="Remoto (Link / Em Casa)">🏠</span>
-                        <% else %>
-                          <span class="text-[10px] text-slate-400 font-semibold" title="Presencial (QR Code)">📱</span>
                         <% end %>
                       </div>
                     </div>
@@ -172,23 +184,14 @@
                     <%= w.created_at.strftime('%d/%m/%Y, %H:%M') %>
                   </td>
 
-                  <!-- Link Conversa -->
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <% if w.link_conversa.present? %>
-                      <%= link_to w.link_conversa, target: "_blank", class: "inline-flex items-center justify-center px-4 py-2 bg-[#002b47] hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-colors shadow-sm gap-2" do %>
-                        💬 Conversa
+                  <% if AppSetting.conference_enabled? %>
+                    <!-- Conferência button -->
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <%= link_to admin_walk_in_path(w), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-lg text-xs font-bold hover:bg-secondary-hover transition-colors shadow-sm" do %>
+                        🔍 Conferir
                       <% end %>
-                    <% else %>
-                      <span class="text-xs text-slate-400 font-mono">Sem link</span>
-                    <% end %>
-                  </td>
-
-                  <!-- Conferência button -->
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <%= link_to admin_walk_in_path(w), class: "inline-flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-lg text-xs font-bold hover:bg-secondary-hover transition-colors shadow-sm" do %>
-                      🔍 Conferir
-                    <% end %>
-                  </td>
+                    </td>
+                  <% end %>
                 </tr>
               <% end %>
             </tbody>

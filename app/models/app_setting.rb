@@ -20,4 +20,10 @@ class AppSetting < ApplicationRecord
   def self.webhook_auth
     get(:webhook_auth)
   end
+
+  # Conference / Workflow shortcuts
+  def self.conference_enabled?
+    val = get(:enable_conference)
+    val.nil? ? true : (val.to_s == 'true' || val.to_s == '1')
+  end
 end
