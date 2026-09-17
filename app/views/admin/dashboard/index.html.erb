@@ -29,18 +29,6 @@
     </div>
   </div>
 
-  <% unless AppSetting.conference_enabled? %>
-    <div class="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between text-blue-800 text-sm">
-      <div class="flex items-center gap-2">
-        <span class="text-lg">⚡</span>
-        <span><strong>Modo de Envio Direto Ativo:</strong> Novos check-ins são enviados diretamente para o Webhook/LIS configurado, sem retenção na fila pendente.</span>
-      </div>
-      <% if current_user&.admin? %>
-        <%= link_to "Alterar em Configurações", edit_admin_settings_path, class: "text-xs font-bold text-blue-700 hover:underline ml-4 whitespace-nowrap" %>
-      <% end %>
-    </div>
-  <% end %>
-
   <!-- Status Tabs -->
   <div class="flex border-b border-slate-200 mb-6 gap-2">
     <%= link_to admin_root_path(status: 'pending', search: params[:search]), 
